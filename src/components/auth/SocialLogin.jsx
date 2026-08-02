@@ -12,7 +12,7 @@ import { FaFacebookF, FaApple } from 'react-icons/fa';
  */
 const SocialLogin = () => {
   // TODO: استبدال هذه الدوال الفارغة بمنطق تسجيل الدخول الفعلي عبر كل مزوّد
-  const handleGoogle = () => {
+const handleGoogle = async () => {
       try {
       const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
