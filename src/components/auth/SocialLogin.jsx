@@ -12,7 +12,7 @@ import { FaFacebookF, FaApple } from 'react-icons/fa';
  * سيتم توصيلها بمزوّدي OAuth الحقيقيين (مثلًا عبر Supabase Auth) في مرحلة لاحقة.
  */
 
-import supabase from '../../lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 const SocialLogin = () => {
   // TODO: استبدال هذه الدوال الفارغة بمنطق تسجيل الدخول الفعلي عبر كل مزوّد
