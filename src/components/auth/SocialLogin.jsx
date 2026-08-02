@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebookF, FaApple } from 'react-icons/fa';
 
+
 /**
  * SocialLogin
  * قسم "أو سجل الدخول باستخدام" + أزرار جوجل / فيسبوك / آبل
@@ -10,9 +11,24 @@ import { FaFacebookF, FaApple } from 'react-icons/fa';
  * ملاحظة مهمة: لم يتم ربط أي منطق مصادقة فعلي بعد (onClick فارغة/placeholder)
  * سيتم توصيلها بمزوّدي OAuth الحقيقيين (مثلًا عبر Supabase Auth) في مرحلة لاحقة.
  */
+
+import { supabase } from '../../lib/supabaseClient';
+
 const SocialLogin = () => {
   // TODO: استبدال هذه الدوال الفارغة بمنطق تسجيل الدخول الفعلي عبر كل مزوّد
-  const handleGoogle = () => {};
+const handleGoogle = async () => {
+      try {
+      const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/auth/callback',
+      },
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error('خطأ في تسجيل الدخول بجوجل:', error.message);
+    alert('فشل تسجيل الدخول: ' + error.message);
+  }};
   const handleFacebook = () => {};
   const handleApple = () => {};
 
