@@ -1,1 +1,14 @@
+# تبعيات npm (يعاد توليدها بـ npm install)
+node_modules/
+
+# ناتج البناء (يعاد توليده بـ npm run build)
+dist/
+
+# ملفات نظام التشغيل والمحررات
+.DS_Store
+.vscode/
+*.log
+.env
+.env.local
+.env.*.local
 node_modules
