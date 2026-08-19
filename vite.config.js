@@ -16,5 +16,13 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.js',
+    /*
+     * pool: 'vmThreads' + fileParallelism: false
+     * حل مشكلة Timeout عند بدء الـ forks worker على هذا الجهاز
+     * (مسار المشروع يحتوي مسافة: "mesori 1.8") — pool الافتراضي
+     * (forks) لا يستطيع إطلاق workers هنا فيموت قبل أي اختبار.
+     */
+    pool: 'vmThreads',
+    fileParallelism: false,
   },
 });

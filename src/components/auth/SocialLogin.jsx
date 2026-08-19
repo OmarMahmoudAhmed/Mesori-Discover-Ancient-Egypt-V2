@@ -17,18 +17,19 @@ import { supabase } from '../../lib/supabaseClient';
 const SocialLogin = () => {
   // TODO: استبدال هذه الدوال الفارغة بمنطق تسجيل الدخول الفعلي عبر كل مزوّد
 const handleGoogle = async () => {
-      try {
-      const { error } = await supabase.auth.signInWithOAuth({
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth/callback',
+        redirectTo: window.location.origin + '/', // خلاص، مش محتاج /auth/callback
       },
     });
     if (error) throw error;
   } catch (error) {
     console.error('خطأ في تسجيل الدخول بجوجل:', error.message);
     alert('فشل تسجيل الدخول: ' + error.message);
-  }};
+  }
+};
   const handleFacebook = () => {};
   const handleApple = () => {};
 

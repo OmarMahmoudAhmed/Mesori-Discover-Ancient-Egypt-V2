@@ -99,7 +99,7 @@ function StatCard({ icon, iconColor, value, label }) {
 
 function ProfilePage() {
 
-  const { userProfile, updateUserProfile, goBack, signOut, userBadges, trackShare } = useApp();
+  const { userProfile, updateUserProfile, goBack, signOut, userBadges, trackShare, session } = useApp();
 
   const [allBadges, setAllBadges] = useState([]);
 
@@ -402,12 +402,23 @@ function ProfilePage() {
             </div>
           </div>
 
+          {/* البريد — خاص بحساب تسجيل الدخول (auth.users) ولا يمكن تعديله
+              من جدول profiles، لذا يُعرض للقراءة فقط من الجلسة الحالية */}
           <div style={{ borderBottom: 'none' }}>
-            <ProfileField
-              icon="fi-rr-envelope" iconColor="#C8922A" label="البريد"
-              value={userProfile.email}
-              onEdit={() => startEditing('email', userProfile.email)}
-            />
+            <div className="flex items-center gap-3 py-3">
+              <div className="flex items-center gap-2 w-24 flex-shrink-0">
+                <i className="fi fi-rr-envelope" aria-hidden="true" style={{ fontSize: '15px', color: '#C8922A' }} />
+                <span className="font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif", color: '#8B4513' }}>
+                  البريد
+                </span>
+              </div>
+              <span
+                className="flex-1 font-bold text-sm text-left truncate"
+                style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}
+              >
+                {session?.user?.email}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -505,12 +516,11 @@ function ProfilePage() {
                 style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
               تعديل {editingField === 'name' ? 'الاسم'
                     : editingField === 'age' ? 'العمر'
-                    : editingField === 'country' ? 'الدولة'
-                    : 'البريد الإلكتروني'}
+                    : 'الدولة'}
             </h3>
 
             <input
-              type={editingField === 'age' ? 'number' : editingField === 'email' ? 'email' : 'text'}
+              type={editingField === 'age' ? 'number' : 'text'}
               value={tempValue}
               onChange={(e) => setTempValue(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-right outline-none font-semibold"

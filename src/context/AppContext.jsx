@@ -636,6 +636,15 @@ export function AppProvider({ children }) {
     return { question: data?.[0] || null, error };
   }, []);
 
+  // الدالة الموحّدة: تجلب كل بيانات المباراة الحالية في طلب واحد
+  // (سؤال + حالة إجابة اللاعبين + معلومات الانتهاء)
+  const getCurrentMatchState = useCallback(async (matchId) => {
+    const { data, error } = await supabase.rpc('get_current_match_state', {
+      p_match_id: matchId,
+    });
+    return { state: data?.[0] || null, error };
+  }, []);
+
   const submitMatchAnswer = useCallback(async (matchId, questionIndex, selectedIndex) => {
     const { data, error } = await supabase.rpc('submit_match_answer', {
       p_match_id: matchId, p_question_index: questionIndex, p_selected_index: selectedIndex,
@@ -781,6 +790,7 @@ export function AppProvider({ children }) {
     declineFriendlyMatch,
     getMatchDetails,
     getMatchQuestion,
+    getCurrentMatchState,
     submitMatchAnswer,
     forfeitMatch,
     isSoundOn,

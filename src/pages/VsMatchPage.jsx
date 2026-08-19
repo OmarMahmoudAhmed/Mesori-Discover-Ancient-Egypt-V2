@@ -2,100 +2,135 @@
  * =====================================================
  * VsMatchPage.jsx - شاشة اللعب الفعلي لمباراة 1 ضد 1
  * =====================================================
+ * مُصمّمة للعب المزامن الفوري (Real-time Synchronized):
+ * - Timer مُرسَل من السيرفر (question_started_at + question_time_limit_seconds)
+ * - الانتقال التلقائي للسؤال التالي (advance_match_round عند إجابة اللاعبين)
+ * - لا يوجد عدّاد محلي: السيرفر هو مصدر الحقيقة الوحيد
+ *
  * حالات الصفحة:
- * 1) 'invite'   → دعوة ودّية لسه منتظرة قبولك (اضغط قبول/رفض)
- * 2) 'loading'  → جاري تجهيز السؤال
- * 3) 'question' → سؤال حالي معروض، في انتظار إجابتك
- * 4) 'waiting'  → خلّصت كل الأسئلة، مستني الخصم يخلّص هو كمان
+ * 1) 'invite'   → دعوة ودّية لسه منتظرة قبولك
+ * 2) 'loading'  → جاري تحميل حالة المباراة
+ * 3) 'question' → سؤال حالي معروض مع عدّ تنازلي من السيرفر
+ * 4) 'waiting'  → اللاعب خلّص الأسئلة، مستني الخصم يخلّص
  * 5) 'result'   → المباراة خلصت، عرض النتيجة
  * =====================================================
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AppWrapper from '../components/layout/AppWrapper';
 import Header      from '../components/layout/Header';
 import { useApp }  from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
 
-const TOTAL_QUESTIONS = 5;
-
 function VsMatchPage() {
-  const { pageData, userProfile, navigateTo, getMatchDetails, getMatchQuestion, submitMatchAnswer, acceptFriendlyMatch, declineFriendlyMatch } = useApp();
+  const { pageData, userProfile, navigateTo, getCurrentMatchState, submitMatchAnswer, acceptFriendlyMatch, declineFriendlyMatch } = useApp();
   const matchId = pageData?.matchId;
 
   const [phase, setPhase] = useState('loading');
-  const [match, setMatch] = useState(null);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [matchState, setMatchState] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(null);
-  const [opponentAnswered, setOpponentAnswered] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
   const channelRef = useRef(null);
+  const timerRef = useRef(null);
+  const hasSubmittedRef = useRef(false);
 
-  const isPlayer1 = match?.player_1_id === userProfile.id;
-  const opponentId = match ? (isPlayer1 ? match.player_2_id : match.player_1_id) : null;
+  const isPlayer1 = matchState?.player_1_id === userProfile.id;
+  const opponentId = matchState ? (isPlayer1 ? matchState.player_2_id : matchState.player_1_id) : null;
 
-  // تحميل تفاصيل المباراة أول مرة
-  useEffect(() => {
+  // جلب حالة المباراة من السيرفر
+  const fetchState = useCallback(async () => {
     if (!matchId) return;
-    async function load() {
-      const { match: m, error } = await getMatchDetails(matchId);
-      if (error || !m) { navigateTo('vs-lobby'); return; }
-      setMatch(m);
-      if (m.mode === 'friendly' && m.status === 'pending' && m.player_2_id === userProfile.id) {
-        setPhase('invite');
-      } else if (m.status === 'finished' || m.status === 'declined' || m.status === 'abandoned') {
-        setPhase('result');
-      } else {
-        setPhase('question');
+    const { state, error } = await getCurrentMatchState(matchId);
+    if (error || !state) { navigateTo('vs-lobby'); return; }
+    setMatchState(state);
+
+    if (state.status === 'finished' || state.status === 'declined' || state.status === 'abandoned') {
+      setPhase('result');
+    } else if (state.status === 'pending' && state.player_2_id === userProfile.id) {
+      setPhase('invite');
+    } else if (state.my_answered) {
+      setPhase('waiting');
+    } else {
+      setPhase('question');
+    }
+    return state;
+  }, [matchId, getCurrentMatchState, navigateTo, userProfile.id]);
+
+  // تحميل أولي
+  useEffect(() => { fetchState(); }, [fetchState]);
+
+  // العدّ التنازلي المُرسَل من السيرفر
+  useEffect(() => {
+    if (phase !== 'question' || !matchState?.question_started_at || !matchState?.question_time_limit_seconds) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      return;
+    }
+
+    const deadline = new Date(matchState.question_started_at).getTime() + (matchState.question_time_limit_seconds * 1000);
+
+    function tick() {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !hasSubmittedRef.current) {
+        // انتهى الوقت: قدّم أي إجابة مختارة (أو فاضية)
+        handleSubmit(true);
       }
     }
-    load();
-  }, [matchId]);
 
-  // تحميل السؤال الحالي
-  useEffect(() => {
-    if (phase !== 'question') return;
-    async function loadQ() {
-      const { question } = await getMatchQuestion(matchId, questionIndex);
-      setCurrentQuestion(question);
-      setSelectedIndex(null);
-      setLastAnswerCorrect(null);
-    }
-    loadQ();
-  }, [phase, questionIndex, matchId]);
+    tick();
+    timerRef.current = setInterval(tick, 200);
+    return () => { clearInterval(timerRef.current); timerRef.current = null; };
+  }, [phase, matchState?.question_started_at, matchState?.question_time_limit_seconds]);
 
-  // استماع فوري لتقدّم الخصم ولحظة انتهاء المباراة
+  // استماع Realtime: أي تغيير في المباراة (سؤال جديد أو انتهاء)
   useEffect(() => {
-    if (!match) return;
+    if (!matchId || !opponentId) return;
 
     const channel = supabase
       .channel(`match-${matchId}`)
       .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'match_answers', filter: `match_id=eq.${matchId}`,
-      }, (payload) => {
-        if (payload.new.player_id === opponentId) {
-          setOpponentAnswered(prev => prev + 1);
-        }
-      })
-      .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}`,
-      }, (payload) => {
-        if (payload.new.status === 'finished') {
-          setMatch(payload.new);
+      }, async (payload) => {
+        const updated = payload.new;
+        if (updated.status === 'finished' || updated.status === 'declined' || updated.status === 'abandoned') {
+          // المباراة خلصت: اجلب النتيجة النهائية
+          const { state: finalState } = await getCurrentMatchState(matchId);
+          if (finalState) setMatchState(finalState);
           setPhase('result');
+          return;
+        }
+        // سؤال جديد: اجلب الحالة الكاملة
+        const newState = await fetchState();
+        if (newState) {
+          hasSubmittedRef.current = false;
+          setSelectedIndex(null);
+          setLastAnswerCorrect(null);
         }
       })
       .subscribe();
 
     channelRef.current = channel;
     return () => supabase.removeChannel(channel);
-  }, [match?.id, opponentId]);
+  }, [matchId, opponentId, getCurrentMatchState, fetchState]);
+
+  // إرسال الإجابة
+  const handleSubmit = useCallback(async (isTimeout = false) => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
+    const idx = selectedIndex ?? 0;
+    const { isCorrect } = await submitMatchAnswer(matchId, matchState.current_question_index, idx);
+    setLastAnswerCorrect(isCorrect);
+
+    // بعد الإجابة: انتظار Realtime event للسؤال التالي أو النتيجة
+    setPhase('waiting');
+  }, [matchId, matchState?.current_question_index, selectedIndex, submitMatchAnswer]);
 
   const handleAccept = async () => {
     const { error } = await acceptFriendlyMatch(matchId);
     if (error) { console.error('❌', error); navigateTo('vs-lobby'); return; }
-    setPhase('question');
+    await fetchState();
   };
 
   const handleDecline = async () => {
@@ -103,23 +138,9 @@ function VsMatchPage() {
     navigateTo('vs-lobby');
   };
 
-  const handleSelectAnswer = async (idx) => {
-    if (selectedIndex !== null) return; // منع الضغط المزدوج
-    setSelectedIndex(idx);
-    const { isCorrect } = await submitMatchAnswer(matchId, questionIndex, idx);
-    setLastAnswerCorrect(isCorrect);
-  };
+  // =========== واجهات الحالات المختلفة ===========
 
-  const handleNext = () => {
-    if (questionIndex + 1 < TOTAL_QUESTIONS) {
-      setQuestionIndex(prev => prev + 1);
-      setPhase('question');
-    } else {
-      setPhase('waiting'); // خلّصت، مستني الخصم أو تحديث الحالة الفوري
-    }
-  };
-
-  if (phase === 'loading' || !match) {
+  if (phase === 'loading' || !matchState) {
     return (
       <AppWrapper>
         <Header showBack={true} />
@@ -157,24 +178,23 @@ function VsMatchPage() {
         <main className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
           <div className="text-4xl animate-pulse">⏳</div>
           <p className="font-bold text-sm" style={{ color: '#3D2B1F' }}>خلّصت أسئلتك! مستني خصمك يخلّص...</p>
-          <p className="text-xs" style={{ color: '#8B5A2B' }}>خصمك جاوب {opponentAnswered} من {TOTAL_QUESTIONS}</p>
         </main>
       </AppWrapper>
     );
   }
 
   if (phase === 'result') {
-    const won = match.winner_id === userProfile.id;
-    const isDraw = !match.winner_id && match.status === 'finished';
-    const myChange = isPlayer1 ? match.player_1_rating_change : match.player_2_rating_change;
+    const won = matchState.winner_id === userProfile.id;
+    const isDraw = !matchState.winner_id && matchState.status === 'finished';
+    const myChange = isPlayer1 ? matchState.player_1_rating_change : matchState.player_2_rating_change;
 
     return (
       <AppWrapper>
         <Header showBack={true} />
         <main className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
-          <div className="text-6xl">{match.status === 'declined' ? '😕' : won ? '🏆' : isDraw ? '🤝' : '😔'}</div>
+          <div className="text-6xl">{matchState.status === 'declined' ? '😕' : won ? '🏆' : isDraw ? '🤝' : '😔'}</div>
           <p className="font-black text-xl" style={{ color: '#3D2B1F' }}>
-            {match.status === 'declined' ? 'الدعوة اتّرفضت' : won ? 'فزت!' : isDraw ? 'تعادل' : 'خسرت'}
+            {matchState.status === 'declined' ? 'الدعوة اتّرفضت' : won ? 'فزت!' : isDraw ? 'تعادل' : 'خسرت'}
           </p>
           {myChange != null && (
             <p className="text-sm font-bold" style={{ color: myChange >= 0 ? '#2D6A3F' : '#DC2626' }}>
@@ -193,38 +213,61 @@ function VsMatchPage() {
     );
   }
 
-  // phase === 'question'
+  // phase === 'question' — السؤال الحالي مع العدّ التنازلي
+  const timerPct = matchState.question_time_limit_seconds > 0
+    ? (timeLeft / matchState.question_time_limit_seconds) * 100
+    : 0;
+  const timerColor = timeLeft <= 5 ? '#DC2626' : timeLeft <= 10 ? '#F59E0B' : '#2D6A3F';
+
   return (
     <AppWrapper>
       <Header showBack={true} />
       <main className="flex-1 flex flex-col px-5 pb-8" style={{ fontFamily: "'Cairo', sans-serif" }}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-bold" style={{ color: '#8B5A2B' }}>سؤال {questionIndex + 1} / {TOTAL_QUESTIONS}</span>
-          <span className="text-xs font-bold" style={{ color: '#8B5A2B' }}>خصمك: {opponentAnswered}/{TOTAL_QUESTIONS}</span>
+
+        {/* شريط المعلومات: السؤال + العدّ التنازلي */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold" style={{ color: '#8B5A2B' }}>
+            سؤال {(matchState.current_question_index ?? 0) + 1} / {matchState.total_questions}
+          </span>
+          <span className="text-sm font-black" style={{ color: timerColor, fontVariantNumeric: 'tabular-nums' }}>
+            {timeLeft}s
+          </span>
         </div>
 
-        {currentQuestion && (
+        {/* شريط التقدم الملوّن */}
+        <div className="w-full h-1.5 rounded-full mb-4" style={{ backgroundColor: 'rgba(200,146,42,0.15)' }}>
+          <div
+            className="h-full rounded-full transition-all duration-200"
+            style={{ width: `${timerPct}%`, backgroundColor: timerColor }}
+          />
+        </div>
+
+        {matchState.question && (
           <>
             <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: 'white', border: '1px solid rgba(200,146,42,0.2)' }}>
-              <p className="font-bold text-sm leading-relaxed" style={{ color: '#3D2B1F' }}>{currentQuestion.question}</p>
+              <p className="font-bold text-sm leading-relaxed" style={{ color: '#3D2B1F' }}>{matchState.question}</p>
             </div>
 
             <div className="space-y-2.5">
-              {currentQuestion.options.map((opt, idx) => {
+              {matchState.options.map((opt, idx) => {
                 const isSelected = selectedIndex === idx;
-                const showFeedback = selectedIndex !== null;
+                const showFeedback = lastAnswerCorrect !== null;
                 const isRight = showFeedback && lastAnswerCorrect && isSelected;
                 const isWrong = showFeedback && !lastAnswerCorrect && isSelected;
                 return (
                   <button
                     key={idx}
-                    onClick={() => handleSelectAnswer(idx)}
-                    disabled={selectedIndex !== null}
+                    onClick={() => {
+                      if (hasSubmittedRef.current) return;
+                      setSelectedIndex(idx);
+                    }}
+                    disabled={hasSubmittedRef.current}
                     className="w-full text-right px-4 py-3.5 rounded-xl font-semibold text-sm press-effect no-tap-highlight"
                     style={{
-                      backgroundColor: isRight ? 'rgba(45,106,63,0.15)' : isWrong ? 'rgba(220,38,38,0.1)' : 'white',
-                      border: `2px solid ${isRight ? '#2D6A3F' : isWrong ? '#DC2626' : 'rgba(200,146,42,0.2)'}`,
+                      backgroundColor: isRight ? 'rgba(45,106,63,0.15)' : isWrong ? 'rgba(220,38,38,0.1)' : isSelected ? 'rgba(200,146,42,0.08)' : 'white',
+                      border: `2px solid ${isRight ? '#2D6A3F' : isWrong ? '#DC2626' : isSelected ? '#C8922A' : 'rgba(200,146,42,0.2)'}`,
                       color: '#3D2B1F',
+                      opacity: hasSubmittedRef.current ? 0.6 : 1,
                     }}
                   >
                     {opt}
@@ -233,13 +276,13 @@ function VsMatchPage() {
               })}
             </div>
 
-            {selectedIndex !== null && (
+            {selectedIndex !== null && !hasSubmittedRef.current && (
               <button
-                onClick={handleNext}
+                onClick={() => handleSubmit(false)}
                 className="w-full mt-6 py-3.5 rounded-2xl font-bold text-white"
                 style={{ backgroundColor: '#C8922A' }}
               >
-                {questionIndex + 1 < TOTAL_QUESTIONS ? 'السؤال التالي' : 'إنهاء'}
+                تأكيد الإجابة
               </button>
             )}
           </>

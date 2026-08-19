@@ -156,8 +156,7 @@ function QuizGroupPage() {
               className="w-10 h-10 rounded-full flex items-center justify-center"
               style={{ backgroundColor: '#2D6A3F' }}
             >
-              {/* 🖼️ صورة مطلوبة: /assets/icons/quiz-group/points.png (18×18px، أبيض) */}
-              <img src="/assets/icons/quiz-group/points.png" alt="" width={18} height={18} />
+              <i className="fi fi-rr-star" aria-hidden="true" style={{ fontSize: '16px', color: '#FFFFFF' }} />
             </div>
             <div>
               <p className="font-black text-lg" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
@@ -178,8 +177,7 @@ function QuizGroupPage() {
               className="w-10 h-10 rounded-full flex items-center justify-center"
               style={{ backgroundColor: '#1A7F8E' }}
             >
-              {/* 🖼️ صورة مطلوبة: /assets/icons/quiz-group/quizzes.png (18×18px، أبيض) */}
-              <img src="/assets/icons/quiz-group/quizzes.png" alt="" width={18} height={18} />
+              <i className="fi fi-rr-document" aria-hidden="true" style={{ fontSize: '16px', color: '#FFFFFF' }} />
             </div>
             <div>
               <p className="font-black text-lg" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
@@ -229,9 +227,9 @@ function QuizGroupPage() {
               </div>
 
               {/*
-                * صورة المرحلة (أو أيقونة القفل إذا كانت مقفولة)
-                * 🖼️ صورة المرحلة: stage.imageSrc (معرّفة في data/levels.js)
-                * 🖼️ صورة القفل: /assets/icons/quiz-group/lock-large.png (32×32px)
+                * أيقونة المرحلة: إيموجي المرحلة (stage.emoji) — متوفر في
+                * البيانات الثابتة وبيانات Supabase معاً.
+                * أيقونة القفل: أيقونة Flaticon بدلاً من صورة مفقودة
                 */}
               <div
                 className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -242,21 +240,16 @@ function QuizGroupPage() {
                 }}
               >
                 {stage.isUnlocked ? (
-                  <img
-                    src={stage.imageSrc}
-                    alt={stage.title}
-                    width={32}
-                    height={32}
-                    style={{ objectFit: 'contain' }}
-                  />
+                  <span
+                    className="text-3xl leading-none"
+                    style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.12))' }}
+                    role="img"
+                    aria-label={stage.title}
+                  >
+                    {stage.emoji}
+                  </span>
                 ) : (
-                  <img
-                    src="/assets/icons/quiz-group/lock-large.png"
-                    alt="مقفولة"
-                    width={32}
-                    height={32}
-                    style={{ objectFit: 'contain' }}
-                  />
+                  <i className="fi fi-rr-lock" aria-hidden="true" style={{ fontSize: '20px', color: '#9CA3AF' }} />
                 )}
               </div>
 
@@ -310,8 +303,7 @@ function QuizGroupPage() {
                   className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{ backgroundColor: '#F3F4F6' }}
                 >
-                  {/* 🖼️ صورة مطلوبة: /assets/icons/quiz-group/lock-small.png (20×20px) */}
-                  <img src="/assets/icons/quiz-group/lock-small.png" alt="مقفولة" width={20} height={20} />
+                  <i className="fi fi-rr-lock" aria-hidden="true" style={{ fontSize: '16px', color: '#9CA3AF' }} />
                 </div>
               )}
 

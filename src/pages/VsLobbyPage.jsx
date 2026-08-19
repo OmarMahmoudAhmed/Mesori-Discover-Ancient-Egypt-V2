@@ -64,12 +64,33 @@ function VsLobbyPage() {
     setMode('menu');
   };
 
-  useEffect(() => () => { if (pollRef.current) supabase.removeChannel(pollRef.current); }, []);
+  useEffect(() => () => {
+    if (pollRef.current) supabase.removeChannel(pollRef.current);
+    if (inviteChannelRef.current) supabase.removeChannel(inviteChannelRef.current);
+  }, []);
+
+  const inviteChannelRef = useRef(null);
 
   const handleInvite = async (opponentId, opponentName) => {
-    const { error } = await inviteFriendlyMatch(opponentId);
+    const { matchId: invitedMatchId, error } = await inviteFriendlyMatch(opponentId);
     if (error) { console.error('❌ خطأ في الدعوة:', error); return; }
     setInviteSentTo(opponentName);
+
+    // استماع فوري: لو الصديق قبل الدعوة، انتقل للمباراة فوراً
+    if (invitedMatchId) {
+      const channel = supabase
+        .channel(`invite-${invitedMatchId}`)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${invitedMatchId}`,
+        }, (payload) => {
+          if (payload.new.status === 'in_progress') {
+            supabase.removeChannel(channel);
+            navigateTo('vs-match', { matchId: invitedMatchId });
+          }
+        })
+        .subscribe();
+      inviteChannelRef.current = channel;
+    }
   };
 
   return (

@@ -219,7 +219,7 @@ function LeaderboardPage() {
                           color: isMe ? 'white' : '#3D2B1F',
                         }}
                       >
-                        {isMe ? player.rank : player.rank}
+                        {player.rank}
                       </span>
                     )}
                   </div>
