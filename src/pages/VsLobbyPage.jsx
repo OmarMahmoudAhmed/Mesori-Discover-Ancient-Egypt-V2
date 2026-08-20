@@ -15,13 +15,17 @@ import { useApp }  from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
 
 function VsLobbyPage() {
-  const { userProfile, findRandomMatch, cancelMatchmaking, searchUsers, inviteFriendlyMatch, navigateTo } = useApp();
+  const { userProfile, findRandomMatch, cancelMatchmaking, requestBotMatch, searchUsers, inviteFriendlyMatch, navigateTo } = useApp();
 
   const [mode, setMode] = useState('menu'); // menu | searching | friendly
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [inviteSentTo, setInviteSentTo] = useState(null);
   const pollRef = useRef(null);
+  const timeoutRef = useRef(null); // مؤقّت الـ30 ثانية قبل تفعيل البوت
+
+  // بعد المدة دي من غير خصم حقيقي، اللاعب ياخد بوت بدل ما يفضل مستني
+  const MATCHMAKING_TIMEOUT_MS = 30000;
 
   // بحث عن أصدقاء بالاسم (مع تأخير بسيط عشان ما نضربش الخادم بكل حرف)
   useEffect(() => {
@@ -44,22 +48,47 @@ function VsLobbyPage() {
       navigateTo('vs-match', { matchId });
       return;
     }
-    // لسه بيدوّر: استمع لأي مباراة جديدة أنا طرف فيها عبر Realtime
+
+    const goToMatch = (id) => {
+      if (pollRef.current) { supabase.removeChannel(pollRef.current); pollRef.current = null; }
+      if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
+      navigateTo('vs-match', { matchId: id });
+    };
+
+    // لسه بيدوّر: استمع لأي مباراة جديدة أنا طرف فيها عبر Realtime.
+    // ملحوظة: find_or_create_match بتحط اللاعب المنتظر (أنا دلوقتي)
+    // كـ player_1_id، واللاعب اللي بيلاقيه لاحقاً كـ player_2_id — فلازم
+    // نسمع على العمودين مع بعض، مش player_2_id بس (كان ده سبب إن
+    // المطابقة الحقيقية ما توصلش أبداً للاعب اللي دخل الطابور الأول).
     const channel = supabase
       .channel(`matchmaking-${userProfile.id}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'matches',
+        filter: `player_1_id=eq.${userProfile.id}`,
+      }, (payload) => goToMatch(payload.new.id))
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'matches',
         filter: `player_2_id=eq.${userProfile.id}`,
-      }, (payload) => {
-        supabase.removeChannel(channel);
-        navigateTo('vs-match', { matchId: payload.new.id });
-      })
+      }, (payload) => goToMatch(payload.new.id))
       .subscribe();
     pollRef.current = channel;
+
+    // بعد 30 ثانية من غير خصم حقيقي: بوت تلقائي، من غير ما اللاعب يحس
+    timeoutRef.current = setTimeout(async () => {
+      const { matchId: botMatchId, error: botError } = await requestBotMatch();
+      if (botError) {
+        // على الأغلب يعني إن مباراة حقيقية اتلقّت في نفس اللحظة تقريباً —
+        // سيب قناة الـ Realtime تتصرف عادي، من غير ما نوقف البحث بالغلط
+        console.warn('⏳ تفعيل البوت اتأجّل:', botError.message);
+        return;
+      }
+      if (botMatchId) goToMatch(botMatchId);
+    }, MATCHMAKING_TIMEOUT_MS);
   };
 
   const cancelSearch = async () => {
     if (pollRef.current) { supabase.removeChannel(pollRef.current); pollRef.current = null; }
+    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
     await cancelMatchmaking();
     setMode('menu');
   };
@@ -67,6 +96,7 @@ function VsLobbyPage() {
   useEffect(() => () => {
     if (pollRef.current) supabase.removeChannel(pollRef.current);
     if (inviteChannelRef.current) supabase.removeChannel(inviteChannelRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
   }, []);
 
   const inviteChannelRef = useRef(null);

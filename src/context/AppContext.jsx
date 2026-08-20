@@ -652,6 +652,21 @@ export function AppProvider({ children }) {
     return { isCorrect: data, error };
   }, []);
 
+  // بعد 25-30 ثانية بحث من غير خصم حقيقي: يستبدله بوت (اللاعب ميعرفش)
+  const requestBotMatch = useCallback(async () => {
+    const { data, error } = await supabase.rpc('request_bot_match');
+    return { matchId: data, error };
+  }, []);
+
+  // بيتقال من عميل اللاعب الإنسان نفسه على مؤقّت عشوائي (محاكاة البوت) —
+  // الصح/الغلط بيتحسم في السيرفر برضه، مش هنا
+  const submitBotAnswer = useCallback(async (matchId, questionIndex) => {
+    const { data, error } = await supabase.rpc('submit_bot_answer', {
+      p_match_id: matchId, p_question_index: questionIndex,
+    });
+    return { isCorrect: data, error };
+  }, []);
+
   const forfeitMatch = useCallback(async (matchId) => {
     const { error } = await supabase.rpc('forfeit_abandoned_match', { p_match_id: matchId });
     return { error };
@@ -792,6 +807,8 @@ export function AppProvider({ children }) {
     getMatchQuestion,
     getCurrentMatchState,
     submitMatchAnswer,
+    requestBotMatch,
+    submitBotAnswer,
     forfeitMatch,
     isSoundOn,
     toggleSound,

@@ -21,9 +21,10 @@ import AppWrapper from '../components/layout/AppWrapper';
 import Header      from '../components/layout/Header';
 import { useApp }  from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
+import { AvatarDisplay } from '../data/avatars';
 
 function VsMatchPage() {
-  const { pageData, userProfile, navigateTo, getCurrentMatchState, submitMatchAnswer, acceptFriendlyMatch, declineFriendlyMatch } = useApp();
+  const { pageData, userProfile, navigateTo, getCurrentMatchState, submitMatchAnswer, submitBotAnswer, acceptFriendlyMatch, declineFriendlyMatch } = useApp();
   const matchId = pageData?.matchId;
 
   const [phase, setPhase] = useState('loading');
@@ -114,6 +115,33 @@ function VsMatchPage() {
     return () => supabase.removeChannel(channel);
   }, [matchId, opponentId, getCurrentMatchState, fetchState]);
 
+  // محاكاة إجابة البوت — فقط لو المباراة ضد بوت. مفيش عميل تاني يمثّله،
+  // فعميل اللاعب نفسه هو اللي بيحدد "امتى" البوت يجاوب (تأخير عشوائي
+  // يحاكي وقت تفكير إنسان)، لكن الصح/الغلط بيتحسم في السيرفر
+  // (submit_bot_answer) مش هنا — عشان يفضل نفس مصدر الحقيقة الوحيد.
+  useEffect(() => {
+    if (!matchState?.is_bot_match || phase !== 'question') return;
+    if (matchState.opponent_answered) return;
+
+    const deadline = matchState.question_started_at
+      ? new Date(matchState.question_started_at).getTime() + matchState.question_time_limit_seconds * 1000
+      : Date.now() + matchState.question_time_limit_seconds * 1000;
+    const remainingMs = Math.max(1000, deadline - Date.now());
+
+    // بين 1.5 ثانية و(الوقت المتبقي - نص ثانية أمان)، عشان يحس طبيعي
+    // ومايجاوبش بالظبط في نفس اللحظة كل مرة
+    const minDelay = 1500;
+    const maxDelay = Math.max(minDelay + 400, remainingMs - 500);
+    const delay = minDelay + Math.random() * (maxDelay - minDelay);
+
+    const timer = setTimeout(() => {
+      submitBotAnswer(matchId, matchState.current_question_index);
+    }, delay);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchState?.is_bot_match, matchState?.current_question_index, matchState?.opponent_answered, phase, matchId]);
+
   // إرسال الإجابة
   const handleSubmit = useCallback(async (isTimeout = false) => {
     if (hasSubmittedRef.current) return;
@@ -178,6 +206,18 @@ function VsMatchPage() {
         <main className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
           <div className="text-4xl animate-pulse">⏳</div>
           <p className="font-bold text-sm" style={{ color: '#3D2B1F' }}>خلّصت أسئلتك! مستني خصمك يخلّص...</p>
+          {matchState.opponent_username && (
+            <div className="flex items-center gap-2.5 mt-2 px-4 py-2.5 rounded-2xl" style={{ backgroundColor: 'white', border: '1px solid rgba(200,146,42,0.2)' }}>
+              <AvatarDisplay avatarKey={matchState.opponent_character} size={36} />
+              <div className="text-right">
+                <p className="text-xs font-bold" style={{ color: '#3D2B1F' }}>{matchState.opponent_username}</p>
+                <p className="text-[10px]" style={{ color: '#8B5A2B' }}>
+                  {matchState.opponent_correct_count} / {matchState.total_questions} صح
+                  {matchState.opponent_answered && (matchState.opponent_correct ? ' · جاوب ✅' : ' · جاوب ❌')}
+                </p>
+              </div>
+            </div>
+          )}
         </main>
       </AppWrapper>
     );
@@ -241,6 +281,28 @@ function VsMatchPage() {
             style={{ width: `${timerPct}%`, backgroundColor: timerColor }}
           />
         </div>
+
+        {/* هوية الخصم + نتيجته الحية — بتشتغل بنفس الشكل للبوت والإنسان،
+            لأن الاتنين صفوف profiles حقيقية من نفس الشكل بالظبط */}
+        {matchState.opponent_username && (
+          <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(200,146,42,0.06)' }}>
+            <div className="flex items-center gap-2">
+              <AvatarDisplay avatarKey={matchState.opponent_character} size={30} />
+              <div className="text-right">
+                <p className="text-[11px] font-bold leading-tight" style={{ color: '#3D2B1F' }}>{matchState.opponent_username}</p>
+                <p className="text-[9px] leading-tight" style={{ color: '#8B5A2B' }}>تصنيف {matchState.opponent_rating}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black" style={{ color: '#2D6A3F', fontVariantNumeric: 'tabular-nums' }}>
+                {matchState.opponent_correct_count}/{matchState.total_questions}
+              </span>
+              {matchState.opponent_answered && (
+                <span className="text-sm">{matchState.opponent_correct ? '✅' : '❌'}</span>
+              )}
+            </div>
+          </div>
+        )}
 
         {matchState.question && (
           <>
