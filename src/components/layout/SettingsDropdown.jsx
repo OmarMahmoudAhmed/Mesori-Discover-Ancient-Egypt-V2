@@ -54,22 +54,23 @@ function SettingsDropdown({ isOpen, onClose }) {
       {isOpen && (
         <>
           {/* طبقة شفافة تقفل القائمة عند الضغط برّاها */}
-          <motion.div
-            className="fixed inset-0 z-30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
+            <motion.div
+              className="fixed inset-0 z-30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onClose}
+            />
 
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute left-0 top-14 z-40 w-56 rounded-2xl overflow-hidden"
-            style={{ backgroundColor: 'white', boxShadow: '0 8px 24px rgba(61,43,31,0.2)', border: '1px solid rgba(200,146,42,0.15)' }}
-          >
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.95 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute right-0 top-14 z-40 w-56 max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden origin-top-right"
+              style={{ backgroundColor: 'white', boxShadow: '0 8px 24px rgba(61,43,31,0.2)', border: '1px solid rgba(200,146,42,0.15)' }}
+            >
             {menuItems.map((item, idx) => (
               <button
                 key={item.key}

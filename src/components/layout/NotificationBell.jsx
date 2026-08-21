@@ -53,14 +53,14 @@ function NotificationBell() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
             />
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.96 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="absolute right-0 top-14 z-40 w-72 max-h-96 overflow-y-auto rounded-2xl"
-              style={{ backgroundColor: 'white', boxShadow: '0 8px 24px rgba(61,43,31,0.2)', border: '1px solid rgba(200,146,42,0.15)' }}
-            >
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute left-0 top-14 z-40 w-72 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto rounded-2xl origin-top-left"
+                style={{ backgroundColor: 'white', boxShadow: '0 8px 24px rgba(61,43,31,0.2)', border: '1px solid rgba(200,146,42,0.15)' }}
+              >
               <div
                 className="flex items-center justify-between px-4 py-3 sticky top-0"
                 style={{ backgroundColor: 'white', borderBottom: '1px solid rgba(200,146,42,0.12)' }}
