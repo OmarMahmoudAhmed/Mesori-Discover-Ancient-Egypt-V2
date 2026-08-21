@@ -96,7 +96,7 @@ function LeaderboardPage() {
 
       <main
         className="flex-1 overflow-y-auto app-scroll"
-        style={{ paddingBottom: '96px' }}
+        style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
         {/* قسم الرأس */}
@@ -125,7 +125,7 @@ function LeaderboardPage() {
             {/* العنوان بالعربية */}
             <span
               className="font-bold text-base"
-              style={{ fontFamily: "'Cairo', sans-serif", color: '#C8922A' }}
+              style={{ fontFamily: "'Cairo', sans-serif", color: '#805D1B' }}
             >
               قائمة المتصدرين
             </span>

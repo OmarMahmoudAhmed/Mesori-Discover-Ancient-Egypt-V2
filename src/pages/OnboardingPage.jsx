@@ -67,7 +67,7 @@ function OnboardingPage() {
           <h1 className="text-2xl font-black mb-2" style={{ color: '#F4E2BC' }}>
             أهلاً بيك في ميسوري!
           </h1>
-          <p className="text-sm" style={{ color: '#C8922A' }}>
+          <p className="text-sm" style={{ color: '#805D1B' }}>
             قبل ما نبدأ رحلتك في مصر القديمة، عايزين نعرفك أكتر
           </p>
         </div>

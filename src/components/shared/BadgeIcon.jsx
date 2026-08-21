@@ -27,7 +27,7 @@ export function BadgeIcon({ icon, size = 28, color = '#C8922A', locked = false }
     <i
       className={`fi ${icon || 'fi-sr-medal'}`}
       aria-hidden="true"
-      style={{ fontSize: size, color: locked ? '#A8A29E' : color }}
+      style={{ fontSize: size, color: locked ? '#686462' : color }}
     />
   );
 }

@@ -81,7 +81,7 @@ function SettingsDropdown({ isOpen, onClose }) {
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(200,146,42,0.08)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                <i className={`fi ${item.icon}`} aria-hidden="true" style={{ fontSize: '18px', color: '#C8922A' }} />
+                <i className={`fi ${item.icon}`} aria-hidden="true" style={{ fontSize: '18px', color: '#805D1B' }} />
                 <span className="font-bold text-sm" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
                   {item.label}
                 </span>

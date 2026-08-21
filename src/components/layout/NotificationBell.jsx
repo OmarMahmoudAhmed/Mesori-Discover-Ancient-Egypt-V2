@@ -34,7 +34,7 @@ function NotificationBell() {
         style={{ backgroundColor: 'rgba(200,146,42,0.12)' }}
         aria-label="الإشعارات"
       >
-        <i className="fi fi-rr-bell" aria-hidden="true" style={{ fontSize: '18px', color: '#C8922A' }} />
+        <i className="fi fi-rr-bell" aria-hidden="true" style={{ fontSize: '18px', color: '#805D1B' }} />
         {unreadCount > 0 && (
           <span
             className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[10px] font-black text-white"
@@ -72,7 +72,7 @@ function NotificationBell() {
                   <button
                     onClick={markAllNotificationsRead}
                     className="text-xs font-bold"
-                    style={{ fontFamily: "'Cairo', sans-serif", color: '#C8922A' }}
+                    style={{ fontFamily: "'Cairo', sans-serif", color: '#805D1B' }}
                   >
                     علّم الكل كمقروء
                   </button>
@@ -100,7 +100,7 @@ function NotificationBell() {
                     <i
                       className={`fi ${n.type === 'badge' ? 'fi-sr-medal' : n.type === 'match_invite' || n.type === 'match_result' ? 'fi-sr-sword' : 'fi-sr-envelope'}`}
                       aria-hidden="true"
-                      style={{ fontSize: '14px', color: '#C8922A', marginTop: '2px' }}
+                      style={{ fontSize: '14px', color: '#805D1B', marginTop: '2px' }}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-xs" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
@@ -111,7 +111,7 @@ function NotificationBell() {
                           {n.body}
                         </p>
                       )}
-                      <p className="text-[10px] mt-1" style={{ fontFamily: "'Cairo', sans-serif", color: '#A8A29E' }}>
+                      <p className="text-[10px] mt-1" style={{ fontFamily: "'Cairo', sans-serif", color: '#686462' }}>
                         {timeAgo(n.created_at)}
                       </p>
                     </div>

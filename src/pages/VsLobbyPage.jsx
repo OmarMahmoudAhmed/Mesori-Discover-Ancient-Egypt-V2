@@ -127,7 +127,7 @@ function VsLobbyPage() {
     <AppWrapper>
       <Header showBack={true} />
 
-      <main className="flex-1 flex flex-col px-6 pb-24" style={{ fontFamily: "'Cairo', sans-serif" }}>
+      <main className="flex-1 flex flex-col px-6" style={{ fontFamily: "'Cairo', sans-serif", paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
 
         {mode === 'menu' && (
           <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
@@ -145,12 +145,12 @@ function VsLobbyPage() {
               <i className="fi fi-sr-shuffle" aria-hidden="true" style={{ fontSize: '16px' }} />
               <span>مباراة عشوائية</span>
             </button>
-            <p className="text-[11px] -mt-2" style={{ color: '#A8A29E' }}>خصم عشوائي، فوز يكسبك نقاط ورصيد إضافي</p>
+            <p className="text-[11px] -mt-2" style={{ color: '#686462' }}>خصم عشوائي، فوز يكسبك نقاط ورصيد إضافي</p>
 
             <button
               onClick={() => setMode('friendly')}
               className="w-full max-w-xs flex items-center justify-center gap-2 py-4 rounded-2xl font-bold press-effect no-tap-highlight"
-              style={{ backgroundColor: 'white', border: '2px solid #C8922A', color: '#C8922A' }}
+              style={{ backgroundColor: 'white', border: '2px solid #C8922A', color: '#805D1B' }}
             >
               <i className="fi fi-rr-user-add" aria-hidden="true" style={{ fontSize: '16px' }} />
               <span>مباراة ودّية مع صديق</span>

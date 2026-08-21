@@ -71,7 +71,7 @@ function QuizGroupPage() {
 
       <main
         className="flex-1 overflow-y-auto app-scroll"
-        style={{ paddingBottom: '96px' }}
+        style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
         {/* ===== قسم الرأس: الشعار والشخصية ===== */}

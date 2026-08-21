@@ -39,7 +39,7 @@ function AppWrapper({ children }) {
      * min-h-screen: يضمن ملء الشاشة كاملاً
      */
     <div
-      className="min-h-screen w-full flex justify-center"
+      className="min-h-dvh w-full flex justify-center"
       style={{ backgroundColor: '#1a1a1a' }}
     >
 
@@ -48,7 +48,9 @@ function AppWrapper({ children }) {
         *
         * w-full       = يأخذ العرض الكامل على الموبايل
         * max-w-md     = الحد الأقصى 448px (مثالي للموبايل والتابلت)
-        * min-h-screen = على الأقل بطول شاشة كاملة
+        * min-h-dvh    = ارتفاع الشاشة الفعلي المرئي (مش 100vh القديمة،
+        *                اللي بتتحسب كأن شريط عنوان المتصفح مختفي دايماً
+        *                وبتقص جزء من أسفل الشاشة فعلياً على الموبايل)
         * flex flex-col= ترتيب عمودي: Header + Main + BottomNav
         * relative     = لتمكين العناصر المُحددة الموقع داخله
         * overflow-x-hidden = يمنع التمرير الأفقي العرضي
@@ -56,7 +58,7 @@ function AppWrapper({ children }) {
       <div
         className="
           w-full max-w-md
-          min-h-screen
+          min-h-dvh
           flex flex-col
           relative
           overflow-x-hidden
@@ -66,10 +68,10 @@ function AppWrapper({ children }) {
 
           /*
            * 🖼️ صورة الخلفية الكاملة للتطبيق (أعمدة + عين حورس + هيروغليفية + مويجات + كثبان)
-           * سيتم إضافتها لاحقاً على المسار: /assets/backgrounds/app-background.png
-           * راجع README.md لتفاصيل المقاس المقترح وطريقة عملها مع الصفحات الطويلة
+           * WebP بدل PNG — نفس الشكل بالظبط، 456KB → 11KB (كانت بتتحمّل
+           * مع كل صفحة لأنها هنا في AppWrapper المشترك)
            */
-          backgroundImage:    'url(/assets/backgrounds/app-background.png)',
+          backgroundImage:    'url(/assets/backgrounds/app-background.webp)',
           backgroundRepeat:   'repeat-y',   /* تتكرر عمودياً إن كان المحتوى أطول من الصورة (الصفحة قابلة للتمرير) */
           backgroundPosition: 'top center',
           backgroundSize:     '100% auto', /* تمتد بعرض التطبيق كاملاً */

@@ -20,7 +20,7 @@ function DeveloperInfoPage() {
     <AppWrapper>
       <Header showBack={true} />
 
-      <main className="flex-1 px-6 pb-24">
+      <main className="flex-1 px-6" style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">🏺</div>
           <h1 className="text-xl font-black" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
@@ -42,13 +42,13 @@ function DeveloperInfoPage() {
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl press-effect no-tap-highlight mb-3"
           style={{ backgroundColor: 'white', border: '1px solid rgba(200,146,42,0.2)' }}
         >
-          <i className="fi fi-rr-envelope" aria-hidden="true" style={{ fontSize: '16px', color: '#C8922A' }} />
+          <i className="fi fi-rr-envelope" aria-hidden="true" style={{ fontSize: '16px', color: '#805D1B' }} />
           <span className="font-bold text-sm" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
             تواصل معنا
           </span>
         </a>
 
-        <p className="text-center text-xs mt-4" style={{ fontFamily: "'Cairo', sans-serif", color: '#A8A29E' }}>
+        <p className="text-center text-xs mt-4" style={{ fontFamily: "'Cairo', sans-serif", color: '#686462' }}>
           الإصدار 1.4
         </p>
       </main>

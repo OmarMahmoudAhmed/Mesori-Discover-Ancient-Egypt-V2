@@ -331,7 +331,7 @@ function QuizPage() {
           className="flex-1 flex flex-col items-center justify-center gap-3 px-8 text-center"
           style={{ paddingBottom: '48px' }}
         >
-          <i className="fi fi-rr-hourglass-start" aria-hidden="true" style={{ fontSize: '46px', color: '#C8922A' }} />
+          <i className="fi fi-rr-hourglass-start" aria-hidden="true" style={{ fontSize: '46px', color: '#805D1B' }} />
           <h2 className="font-black text-xl" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
             هذا الاختبار غير متاح بعد
           </h2>
@@ -550,7 +550,7 @@ function QuizPage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
               style={{ backgroundColor: '#FDF3E3', border: '1px solid rgba(200,146,42,0.3)' }}
             >
-              <i className="fi fi-rr-star" aria-hidden="true" style={{ fontSize: '15px', color: '#C8922A' }} />
+              <i className="fi fi-rr-star" aria-hidden="true" style={{ fontSize: '15px', color: '#805D1B' }} />
               <span
                 className="font-bold text-sm"
                 style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}

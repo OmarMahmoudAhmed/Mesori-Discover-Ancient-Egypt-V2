@@ -156,7 +156,7 @@ function ProfilePage() {
 
       <main
         className="flex-1 overflow-y-auto app-scroll"
-        style={{ paddingBottom: '96px' }}
+        style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
         {/* قسم الرأس */}
@@ -173,7 +173,7 @@ function ProfilePage() {
             {/* النجوم الزخرفية */}
             <div className="flex gap-1 mb-1">
               {['✦', '✦', '✦'].map((s, i) => (
-                <span key={i} style={{ color: '#C8922A', fontSize: '12px' }}>{s}</span>
+                <span key={i} style={{ color: '#805D1B', fontSize: '12px' }}>{s}</span>
               ))}
             </div>
 
@@ -291,7 +291,7 @@ function ProfilePage() {
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(200,146,42,0.12)' }}
             >
-              <i className="fi fi-rr-medal" aria-hidden="true" style={{ fontSize: '16px', color: '#C8922A' }} />
+              <i className="fi fi-rr-medal" aria-hidden="true" style={{ fontSize: '16px', color: '#805D1B' }} />
             </div>
           </div>
 
@@ -313,12 +313,12 @@ function ProfilePage() {
                   </div>
                   <span
                     className="text-[10px] font-bold leading-tight"
-                    style={{ fontFamily: "'Cairo', sans-serif", color: earned ? '#3D2B1F' : '#A8A29E' }}
+                    style={{ fontFamily: "'Cairo', sans-serif", color: earned ? '#3D2B1F' : '#686462' }}
                   >
                     {badge.title_ar}
                   </span>
                   {!badge.is_active && (
-                    <span className="text-[9px]" style={{ fontFamily: "'Cairo', sans-serif", color: '#A8A29E' }}>
+                    <span className="text-[9px]" style={{ fontFamily: "'Cairo', sans-serif", color: '#686462' }}>
                       قريباً
                     </span>
                   )}
@@ -356,7 +356,7 @@ function ProfilePage() {
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(200,146,42,0.12)' }}
             >
-              <i className="fi fi-rr-id-badge" aria-hidden="true" style={{ fontSize: '15px', color: '#C8922A' }} />
+              <i className="fi fi-rr-id-badge" aria-hidden="true" style={{ fontSize: '15px', color: '#805D1B' }} />
             </div>
           </div>
 
@@ -380,7 +380,7 @@ function ProfilePage() {
           {/* الجنس — منفصل عن اختيار الأفاتار، زرّين مباشرين بدل نافذة التعديل */}
           <div className="flex items-center gap-3 py-3" style={{ borderBottom: '1px solid rgba(200,146,42,0.1)' }}>
             <div className="flex items-center gap-2 w-24 flex-shrink-0">
-              <i className="fi fi-rr-venus-mars" aria-hidden="true" style={{ fontSize: '15px', color: '#C8922A' }} />
+              <i className="fi fi-rr-venus-mars" aria-hidden="true" style={{ fontSize: '15px', color: '#805D1B' }} />
               <span className="font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif", color: '#8B4513' }}>
                 الجنس
               </span>
@@ -407,7 +407,7 @@ function ProfilePage() {
           <div style={{ borderBottom: 'none' }}>
             <div className="flex items-center gap-3 py-3">
               <div className="flex items-center gap-2 w-24 flex-shrink-0">
-                <i className="fi fi-rr-envelope" aria-hidden="true" style={{ fontSize: '15px', color: '#C8922A' }} />
+                <i className="fi fi-rr-envelope" aria-hidden="true" style={{ fontSize: '15px', color: '#805D1B' }} />
                 <span className="font-semibold text-sm" style={{ fontFamily: "'Cairo', sans-serif", color: '#8B4513' }}>
                   البريد
                 </span>
@@ -472,7 +472,7 @@ function ProfilePage() {
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: 'rgba(200,146,42,0.12)' }}
             >
-              <i className="fi fi-rr-chart-histogram" aria-hidden="true" style={{ fontSize: '14px', color: '#C8922A' }} />
+              <i className="fi fi-rr-chart-histogram" aria-hidden="true" style={{ fontSize: '14px', color: '#805D1B' }} />
             </div>
           </div>
 

@@ -95,7 +95,7 @@ function PlayerProfileModal({ player, onClose }) {
                   <span className="text-xs font-bold" style={{ color: '#8B5A2B' }}>
                     المستوى {player.levelReached}
                   </span>
-                  <span className="text-xs font-bold" style={{ color: '#C8922A' }}>
+                  <span className="text-xs font-bold" style={{ color: '#805D1B' }}>
                     {player.points} نقطة
                   </span>
                 </div>

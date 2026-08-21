@@ -37,7 +37,10 @@ function BottomNav({ activePage = 'home' }) {
         boxShadow: '0 -4px 12px rgba(62, 39, 35, 0.12)',
       }}
     >
-      <div className="flex items-center justify-around px-2 py-1.5 pb-safe">
+      <div
+        className="flex items-center justify-around px-2 pt-1.5"
+        style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         {navItems.map((item) => {
           const isActive = activePage === item.id;
 
@@ -68,7 +71,12 @@ function BottomNav({ activePage = 'home' }) {
                 aria-hidden="true"
                 style={{
                   fontSize: '22px',
-                  color: isActive ? '#C8922A' : '#A3906C',
+                  /* اللونين القديمين (C8922A / A3906C) كانوا بيفشلوا حتى حد
+                     تباين الأيقونات (3:1) فوق شريط الزجاج شبه الشفاف —
+                     اتقاسوا بالتركيب الفعلي مش تخمين. النسخة الجديدة داكنة
+                     كفاية إنها تتقرا، والدائرة الزجاجية + التكبير الخفيف +
+                     الظل بيفرّقوا النشط عن الباقي برضه مش بس اللون */
+                  color: isActive ? '#A87B23' : '#938261',
                   filter: isActive ? 'drop-shadow(0 1px 3px rgba(200, 146, 42, 0.3))' : 'none',
                   zIndex: 1,
                   transition: 'all 0.2s ease',
