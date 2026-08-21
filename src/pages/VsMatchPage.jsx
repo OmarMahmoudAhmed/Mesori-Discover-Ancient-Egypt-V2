@@ -6,13 +6,17 @@
  * - Timer مُرسَل من السيرفر (question_started_at + question_time_limit_seconds)
  * - الانتقال التلقائي للسؤال التالي (advance_match_round عند إجابة اللاعبين)
  * - لا يوجد عدّاد محلي: السيرفر هو مصدر الحقيقة الوحيد
+ * - انسحاب/عدم نشاط تلقائي: كل لاعب بيبعت نبضة حياة كل 7 ثواني طول ما
+ *   الشاشة مفتوحة وفاتحة فعلياً (foreground). لو أي طرف فضل من غير
+ *   نبضة 30 ثانية (خرج، قفل الشاشة، اتقطع نتّه)، المباراة بتتقفل فوراً
+ *   كخسارة له — مش لازم تستنى باقي الأسئلة تخلص واحد واحد.
  *
  * حالات الصفحة:
  * 1) 'invite'   → دعوة ودّية لسه منتظرة قبولك
  * 2) 'loading'  → جاري تحميل حالة المباراة
  * 3) 'question' → سؤال حالي معروض مع عدّ تنازلي من السيرفر
  * 4) 'waiting'  → اللاعب خلّص الأسئلة، مستني الخصم يخلّص
- * 5) 'result'   → المباراة خلصت، عرض النتيجة
+ * 5) 'result'   → المباراة خلصت، عرض النتيجة (عادية أو بالانسحاب)
  * =====================================================
  */
 
@@ -23,8 +27,92 @@ import { useApp }  from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
 import { AvatarDisplay } from '../data/avatars';
 
+// نبضة الحياة: كل 7 ثواني (يعني نافذة الـ30 ثانية بتسمح بفوات 3-4
+// نبضات قبل ما اللاعب يتحسب منسحب — بيفرق بين انقطاع حقيقي وتقطيع
+// شبكة بسيط)
+const PRESENCE_INTERVAL_MS = 7000;
+const FORFEIT_THRESHOLD_SECONDS = 30;
+// نبدأ نوريّ تحذير عدم النشاط من هنا، مش من أول ثانية غياب — عشان
+// مانضايقش اللاعب بتحذير على أي تأخر طبيعي بسيط في الرد
+const INACTIVITY_WARNING_SECONDS = 10;
+
+// بطاقتا "أنت مقابل الخصم" — نفس الفكرة الأساسية من المرجع (لاعبين
+// جنب بعض حوالين المواجهة)، بس بأبسط شكل يتماشى مع تصميم التطبيق
+// الحالي. مُستخدَمة في شاشتي 'waiting' و'question' الاتنين، فبقت
+// مكوّن منفصل بدل تكرار نفس الـJSX مرتين.
+function DuelBar({ userProfile, matchState, showInactivityWarning, secondsUntilForfeit }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-center gap-1.5 mb-2.5">
+        <span className="text-base">⚔️</span>
+        <p className="text-[11px] font-black tracking-wide" style={{ color: '#8B5A2B' }}>ساحة التحدي</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {/* بطاقة "أنت" */}
+        <div
+          className="flex-1 flex flex-col items-center gap-1 rounded-2xl py-2.5 px-2"
+          style={{ backgroundColor: 'white', border: '1.5px solid rgba(45,106,63,0.25)' }}
+        >
+          <AvatarDisplay avatarKey={userProfile.character} size={38} />
+          <p className="text-[10px] font-bold" style={{ color: '#3D2B1F' }}>أنت</p>
+          <p className="text-base font-black" style={{ color: '#2D6A3F', fontVariantNumeric: 'tabular-nums' }}>
+            {matchState.my_correct_count}
+          </p>
+        </div>
+
+        <span className="text-lg flex-shrink-0">⚔️</span>
+
+        {/* بطاقة الخصم — نفس البناء بالظبط للبوت وللإنسان، لأن الاتنين
+            صفوف profiles حقيقية بنفس الشكل */}
+        {matchState.opponent_username ? (
+          <div
+            className="flex-1 flex flex-col items-center gap-1 rounded-2xl py-2.5 px-2 relative"
+            style={{
+              backgroundColor: 'white',
+              border: `1.5px solid ${showInactivityWarning ? '#F59E0B' : 'rgba(200,146,42,0.25)'}`,
+            }}
+          >
+            {matchState.opponent_answered && !showInactivityWarning && (
+              <span className="absolute -top-1 -right-1 text-xs">
+                {matchState.opponent_correct ? '✅' : '❌'}
+              </span>
+            )}
+            <AvatarDisplay avatarKey={matchState.opponent_character} size={38} />
+            <p className="text-[10px] font-bold truncate max-w-full" style={{ color: '#3D2B1F' }}>
+              {matchState.opponent_username}
+            </p>
+            <p className="text-base font-black" style={{ color: '#C8922A', fontVariantNumeric: 'tabular-nums' }}>
+              {matchState.opponent_correct_count}
+            </p>
+          </div>
+        ) : (
+          <div className="flex-1 rounded-2xl py-2.5 px-2 flex items-center justify-center" style={{ backgroundColor: 'rgba(200,146,42,0.06)' }}>
+            <p className="text-[10px]" style={{ color: '#8B5A2B' }}>...</p>
+          </div>
+        )}
+      </div>
+
+      {/* تحذير عدم النشاط — نفس أسلوب شريط "بنبحث عن خصم" في صفحة
+          البوابة (نص + عدّاد داخل شريط دائري)، لكن هنا للانسحاب */}
+      {showInactivityWarning && (
+        <div className="flex items-center justify-center gap-1.5 mt-2.5 py-1.5 px-3 rounded-full" style={{ backgroundColor: 'rgba(245,158,11,0.12)' }}>
+          <span className="text-xs animate-pulse">⚠️</span>
+          <p className="text-[10px] font-bold" style={{ color: '#B45309' }}>
+            الخصم غير نشط — هتفوز تلقائياً خلال {secondsUntilForfeit} ثانية لو مرجعش
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VsMatchPage() {
-  const { pageData, userProfile, navigateTo, getCurrentMatchState, submitMatchAnswer, submitBotAnswer, acceptFriendlyMatch, declineFriendlyMatch } = useApp();
+  const {
+    pageData, userProfile, navigateTo,
+    getCurrentMatchState, submitMatchAnswer, submitBotAnswer, touchMatchPresence,
+    acceptFriendlyMatch, declineFriendlyMatch,
+  } = useApp();
   const matchId = pageData?.matchId;
 
   const [phase, setPhase] = useState('loading');
@@ -155,6 +243,71 @@ function VsMatchPage() {
     setPhase('waiting');
   }, [matchId, matchState?.current_question_index, selectedIndex, submitMatchAnswer]);
 
+  // =====================================================
+  // نبضة الحياة + فحص الانسحاب — الآلية الفعلية اللي بتخلي الـ30
+  // ثانية حقيقية، مش مجرد نص في الواجهة:
+  //
+  // 1) touchMatchPresence: بتحدّث last_seen بتاعي أنا في السيرفر
+  // 2) fetchState: بتنادي get_current_match_state تاني، واللي
+  //    بيشيل جوّاه فحص "هل أي طرف فضل أكتر من 30 ثانية من غير
+  //    نبضة؟" — فلو حصل، المباراة بتتقفل فوراً كخسارة للطرف الغايب
+  //    وبيوصلني نتيجة الانسحاب من نفس الاستدعاء، من غير ما أستنى
+  //    Realtime event منفصل
+  //
+  // بتوقف تماماً لو الشاشة مش ظاهرة فعلياً (قفلت الموبايل، رحت
+  // تطبيق تاني) — وده بالظبط المطلوب: "مش active" بيتحسب غياب برضه
+  // =====================================================
+  useEffect(() => {
+    if (matchId == null) return;
+    if (phase !== 'question' && phase !== 'waiting') return;
+    if (matchState?.is_bot_match) return; // مفيش انسحاب/نبضة مطلوبة ضد بوت
+
+    let cancelled = false;
+    const tick = async () => {
+      if (document.visibilityState !== 'visible') return;
+      await touchMatchPresence(matchId);
+      if (cancelled) return;
+      await fetchState();
+    };
+
+    tick(); // نبضة فورية عند دخول الشاشة، مش استنى 7 ثواني الأول
+    const interval = setInterval(tick, PRESENCE_INTERVAL_MS);
+
+    // لو رجع للتطبيق بعد ما كان في الخلفية، ابعت نبضة فوراً بدل ما
+    // يستنى الـ tick الجاي — بيقلل فرصة إنه يتحسب غايب بالغلط لمجرد
+    // إنه رجع في توقيت سيء
+    const onVisible = () => { if (document.visibilityState === 'visible') tick(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId, phase, matchState?.is_bot_match, touchMatchPresence, fetchState]);
+
+  // تِك بصري كل ثانية بس عشان عدّاد "الخصم غير نشط منذ..." يتحرّك بسلاسة
+  // من غير ما يحتاج طلب شبكة جديد كل ثانية — بيعيد حساب الفرق من
+  // opponent_last_seen المخزّنة بالفعل في matchState
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (phase !== 'question' && phase !== 'waiting') return;
+    if (!matchState?.opponent_last_seen || matchState?.is_bot_match) return;
+    const id = setInterval(() => forceTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [phase, matchState?.opponent_last_seen, matchState?.is_bot_match]);
+
+  const opponentIdleSeconds = matchState?.opponent_last_seen
+    ? Math.max(0, Math.floor((Date.now() - new Date(matchState.opponent_last_seen).getTime()) / 1000))
+    : 0;
+  const showInactivityWarning =
+    (phase === 'question' || phase === 'waiting') &&
+    !matchState?.is_bot_match &&
+    matchState?.opponent_last_seen &&
+    opponentIdleSeconds >= INACTIVITY_WARNING_SECONDS;
+  const secondsUntilForfeit = Math.max(0, FORFEIT_THRESHOLD_SECONDS - opponentIdleSeconds);
+
   const handleAccept = async () => {
     const { error } = await acceptFriendlyMatch(matchId);
     if (error) { console.error('❌', error); navigateTo('vs-lobby'); return; }
@@ -203,21 +356,17 @@ function VsMatchPage() {
     return (
       <AppWrapper>
         <Header showBack={true} />
-        <main className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
-          <div className="text-4xl animate-pulse">⏳</div>
-          <p className="font-bold text-sm" style={{ color: '#3D2B1F' }}>خلّصت أسئلتك! مستني خصمك يخلّص...</p>
-          {matchState.opponent_username && (
-            <div className="flex items-center gap-2.5 mt-2 px-4 py-2.5 rounded-2xl" style={{ backgroundColor: 'white', border: '1px solid rgba(200,146,42,0.2)' }}>
-              <AvatarDisplay avatarKey={matchState.opponent_character} size={36} />
-              <div className="text-right">
-                <p className="text-xs font-bold" style={{ color: '#3D2B1F' }}>{matchState.opponent_username}</p>
-                <p className="text-[10px]" style={{ color: '#8B5A2B' }}>
-                  {matchState.opponent_correct_count} / {matchState.total_questions} صح
-                  {matchState.opponent_answered && (matchState.opponent_correct ? ' · جاوب ✅' : ' · جاوب ❌')}
-                </p>
-              </div>
-            </div>
-          )}
+        <main className="flex-1 flex flex-col justify-center px-5" style={{ fontFamily: "'Cairo', sans-serif" }}>
+          <DuelBar
+            userProfile={userProfile}
+            matchState={matchState}
+            showInactivityWarning={showInactivityWarning}
+            secondsUntilForfeit={secondsUntilForfeit}
+          />
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="text-3xl animate-pulse">⏳</div>
+            <p className="font-bold text-sm" style={{ color: '#3D2B1F' }}>خلّصت أسئلتك! مستني خصمك يخلّص...</p>
+          </div>
         </main>
       </AppWrapper>
     );
@@ -226,16 +375,33 @@ function VsMatchPage() {
   if (phase === 'result') {
     const won = matchState.winner_id === userProfile.id;
     const isDraw = !matchState.winner_id && matchState.status === 'finished';
+    const isForfeit = matchState.end_reason === 'forfeit';
     const myChange = isPlayer1 ? matchState.player_1_rating_change : matchState.player_2_rating_change;
+
+    let icon = '😔';
+    let title = 'خسرت';
+    let subtitle = null;
+    if (matchState.status === 'declined') {
+      icon = '😕'; title = 'الدعوة اتّرفضت';
+    } else if (isForfeit) {
+      icon = won ? '🏳️' : '🚪';
+      title = won ? 'فزت بالتحدي!' : 'انتهى التحدي';
+      subtitle = won ? 'الخصم انسحب أو اتأخر أكتر من 30 ثانية' : 'ما كنتش نشط لفترة طويلة، فاحتسبنا خسارة';
+    } else if (won) {
+      icon = '🏆'; title = 'فزت!';
+    } else if (isDraw) {
+      icon = '🤝'; title = 'تعادل';
+    }
 
     return (
       <AppWrapper>
         <Header showBack={true} />
         <main className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6" style={{ fontFamily: "'Cairo', sans-serif" }}>
-          <div className="text-6xl">{matchState.status === 'declined' ? '😕' : won ? '🏆' : isDraw ? '🤝' : '😔'}</div>
-          <p className="font-black text-xl" style={{ color: '#3D2B1F' }}>
-            {matchState.status === 'declined' ? 'الدعوة اتّرفضت' : won ? 'فزت!' : isDraw ? 'تعادل' : 'خسرت'}
-          </p>
+          <div className="text-6xl">{icon}</div>
+          <p className="font-black text-xl" style={{ color: '#3D2B1F' }}>{title}</p>
+          {subtitle && (
+            <p className="text-xs font-semibold" style={{ color: '#8B5A2B' }}>{subtitle}</p>
+          )}
           {myChange != null && (
             <p className="text-sm font-bold" style={{ color: myChange >= 0 ? '#2D6A3F' : '#DC2626' }}>
               التصنيف: {myChange >= 0 ? '+' : ''}{myChange}
@@ -282,27 +448,13 @@ function VsMatchPage() {
           />
         </div>
 
-        {/* هوية الخصم + نتيجته الحية — بتشتغل بنفس الشكل للبوت والإنسان،
-            لأن الاتنين صفوف profiles حقيقية من نفس الشكل بالظبط */}
-        {matchState.opponent_username && (
-          <div className="flex items-center justify-between mb-4 px-3 py-2 rounded-xl" style={{ backgroundColor: 'rgba(200,146,42,0.06)' }}>
-            <div className="flex items-center gap-2">
-              <AvatarDisplay avatarKey={matchState.opponent_character} size={30} />
-              <div className="text-right">
-                <p className="text-[11px] font-bold leading-tight" style={{ color: '#3D2B1F' }}>{matchState.opponent_username}</p>
-                <p className="text-[9px] leading-tight" style={{ color: '#8B5A2B' }}>تصنيف {matchState.opponent_rating}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-black" style={{ color: '#2D6A3F', fontVariantNumeric: 'tabular-nums' }}>
-                {matchState.opponent_correct_count}/{matchState.total_questions}
-              </span>
-              {matchState.opponent_answered && (
-                <span className="text-sm">{matchState.opponent_correct ? '✅' : '❌'}</span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* بطاقتا أنت/الخصم — بتشتغل بنفس الشكل للبوت وللإنسان */}
+        <DuelBar
+          userProfile={userProfile}
+          matchState={matchState}
+          showInactivityWarning={showInactivityWarning}
+          secondsUntilForfeit={secondsUntilForfeit}
+        />
 
         {matchState.question && (
           <>

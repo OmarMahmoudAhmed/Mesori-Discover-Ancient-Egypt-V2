@@ -667,6 +667,13 @@ export function AppProvider({ children }) {
     return { isCorrect: data, error };
   }, []);
 
+  // نبضة حياة دورية طول ما شاشة المباراة مفتوحة وفاتحة فعلياً (foreground) —
+  // لو أي لاعب فضل من غير نبضة 30 ثانية، السيرفر بيعتبره منسحب تلقائياً
+  const touchMatchPresence = useCallback(async (matchId) => {
+    const { error } = await supabase.rpc('touch_match_presence', { p_match_id: matchId });
+    return { error };
+  }, []);
+
   const forfeitMatch = useCallback(async (matchId) => {
     const { error } = await supabase.rpc('forfeit_abandoned_match', { p_match_id: matchId });
     return { error };
@@ -809,6 +816,7 @@ export function AppProvider({ children }) {
     submitMatchAnswer,
     requestBotMatch,
     submitBotAnswer,
+    touchMatchPresence,
     forfeitMatch,
     isSoundOn,
     toggleSound,
