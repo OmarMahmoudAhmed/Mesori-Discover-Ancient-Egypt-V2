@@ -15,8 +15,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 
-const SUPPORT_URL = 'https://www.patreon.com/'; // ⬅️ بدّله برابط الدعم الحقيقي (Patreon/GoFundMe)
-const SURVEY_URL  = 'https://forms.google.com/'; // ⬅️ بدّله برابط استطلاع الرأي الحقيقي
+const SUPPORT_URL = 'https://buymeacoffee.com/omarmahmoudahmed'; // ⬅️ بدّله برابط الدعم الحقيقي (Patreon/GoFundMe)
+const SURVEY_URL  = 'https://91572590173260.sarhne.com'; // ⬅️ بدّله برابط استطلاع الرأي الحقيقي
 
 function SettingsDropdown({ isOpen, onClose }) {
   const { isSoundOn, toggleSound, navigateTo } = useApp();

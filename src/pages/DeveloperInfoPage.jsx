@@ -13,7 +13,7 @@ import AppWrapper from '../components/layout/AppWrapper';
 import Header      from '../components/layout/Header';
 import BottomNav   from '../components/layout/BottomNav';
 
-const CONTACT_EMAIL = 'contact@example.com'; // ⬅️ بدّله ببريدك الحقيقي
+const CONTACT_EMAIL = 'omar.mahmoud.ahmed.01@gmail.com'; // ⬅️ بدّله ببريدك الحقيقي
 
 function DeveloperInfoPage() {
   return (
@@ -22,7 +22,7 @@ function DeveloperInfoPage() {
 
       <main className="flex-1 px-6" style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🏺</div>
+          <div className="text-5xl mb-3"></div>
           <h1 className="text-xl font-black" style={{ fontFamily: "'Cairo', sans-serif", color: '#3D2B1F' }}>
             عن ميسوري
           </h1>
@@ -49,7 +49,7 @@ function DeveloperInfoPage() {
         </a>
 
         <p className="text-center text-xs mt-4" style={{ fontFamily: "'Cairo', sans-serif", color: '#686462' }}>
-          الإصدار 1.4
+          الإصدار 1.0
         </p>
       </main>
 
