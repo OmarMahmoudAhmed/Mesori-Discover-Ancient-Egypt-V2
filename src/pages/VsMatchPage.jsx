@@ -203,13 +203,17 @@ function VsMatchPage() {
     return () => supabase.removeChannel(channel);
   }, [matchId, opponentId, getCurrentMatchState, fetchState]);
 
+  // =====================================================
   // محاكاة إجابة البوت — فقط لو المباراة ضد بوت. مفيش عميل تاني يمثّله،
   // فعميل اللاعب نفسه هو اللي بيحدد "امتى" البوت يجاوب (تأخير عشوائي
   // يحاكي وقت تفكير إنسان)، لكن الصح/الغلط بيتحسم في السيرفر
   // (submit_bot_answer) مش هنا — عشان يفضل نفس مصدر الحقيقة الوحيد.
+  // =====================================================
+  // التعديل: إزالة شرط phase نهائياً، والاعتماد فقط على opponent_answered
+  // حتى لا يلغي المؤقت عند تغير phase بسبب إجابة اللاعب.
   useEffect(() => {
-    if (!matchState?.is_bot_match || phase !== 'question') return;
-    if (matchState.opponent_answered) return;
+    if (!matchState?.is_bot_match) return;          // فقط مباريات البوت
+    if (matchState.opponent_answered) return;       // سبق وأجاب البوت
 
     const deadline = matchState.question_started_at
       ? new Date(matchState.question_started_at).getTime() + matchState.question_time_limit_seconds * 1000
@@ -228,7 +232,7 @@ function VsMatchPage() {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchState?.is_bot_match, matchState?.current_question_index, matchState?.opponent_answered, phase, matchId]);
+  }, [matchState?.is_bot_match, matchState?.current_question_index, matchState?.opponent_answered, matchId, submitBotAnswer]);
 
   // إرسال الإجابة
   const handleSubmit = useCallback(async (isTimeout = false) => {
@@ -257,11 +261,28 @@ function VsMatchPage() {
   // بتوقف تماماً لو الشاشة مش ظاهرة فعلياً (قفلت الموبايل، رحت
   // تطبيق تاني) — وده بالظبط المطلوب: "مش active" بيتحسب غياب برضه
   // =====================================================
+  // التعديل: بالنسبة للبوت، لا نحتاج إلى نبضات حياة (لأنه ليس لاعباً حقيقياً)
+  // ولكننا نستمر في جلب الحالة لتحديث الواجهة.
   useEffect(() => {
     if (matchId == null) return;
     if (phase !== 'question' && phase !== 'waiting') return;
-    if (matchState?.is_bot_match) return; // مفيش انسحاب/نبضة مطلوبة ضد بوت
 
+    if (matchState?.is_bot_match) {
+      // للبوت: فقط نجلب الحالة بشكل دوري (بدون touchMatchPresence)
+      let cancelled = false;
+      const tick = async () => {
+        if (cancelled) return;
+        await fetchState();
+      };
+      tick();
+      const interval = setInterval(tick, PRESENCE_INTERVAL_MS);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
+    }
+
+    // للاعبين الحقيقيين: نبضات حياة مع touchMatchPresence
     let cancelled = false;
     const tick = async () => {
       if (document.visibilityState !== 'visible') return;
