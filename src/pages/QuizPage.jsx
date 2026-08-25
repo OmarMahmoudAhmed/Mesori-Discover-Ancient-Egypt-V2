@@ -182,13 +182,6 @@ function QuizPage() {
   /* نتيجة completeStage بعد إنهاء الاختبار: تحمل معلومة "أين المرحلة
    * التالية بالضبط؟" حتى تقدر شاشة النتيجة تعرض زر ينقل إليها مباشرة */
   const [completionResult,     setCompletionResult]     = useState(null);
-  
-  /* --------------------------------------------------
-   * Timer & Heartbeat State - لإلغاء التايمرات عند الخروج
-   * -------------------------------------------------- */
-  const [timer, setTimer] = useState(null);
-  const [heartbeatInterval, setHeartbeatInterval] = useState(null);
-  const [isHeartbeatSkipped, setIsHeartbeatSkipped] = useState(false);
 
   /* تحميل الأسئلة من قاعدة البيانات عند تغيير المرحلة (levelId أو stageId) */
   useEffect(() => {
@@ -209,17 +202,6 @@ function QuizPage() {
     setIsFinished(false);
     setCompletionResult(null);
     setShowExitConfirm(false);
-    
-    // إلغاء أي تايمرات موجودة عند تغيير المرحلة
-    if (timer) {
-      clearTimeout(timer);
-      setTimer(null);
-    }
-    if (heartbeatInterval) {
-      clearInterval(heartbeatInterval);
-      setHeartbeatInterval(null);
-    }
-    setIsHeartbeatSkipped(false);
 
     async function loadQuestions() {
       setLoading(true);
@@ -259,21 +241,6 @@ function QuizPage() {
 
         console.log(`✅ تم تحميل ${formattedQuestions.length} سؤال للمرحلة ${levelId}-${stageId}`);
         setQuestions(formattedQuestions);
-        
-        // ✅ Skip heartbeat مؤقتاً بعد تحميل الأسئلة
-        setIsHeartbeatSkipped(true);
-        
-        // إلغاء التايمر القديم لو موجود
-        if (timer) {
-          clearTimeout(timer);
-          setTimer(null);
-        }
-        
-        // إعادة تشغيل الـ heartbeat بعد 5 ثواني
-        const newTimer = setTimeout(() => {
-          setIsHeartbeatSkipped(false);
-        }, 5000);
-        setTimer(newTimer);
 
       } catch (err) {
         console.error('❌ خطأ غير متوقع:', err);
@@ -287,22 +254,6 @@ function QuizPage() {
     loadQuestions();
   }, [levelId, stageId]); // 🔑 يُعاد التحميل والتصفير عند تغيير أي منهما
 
-  /*
-   * 🔑 إلغاء التايمرات عند unmount للمكون
-   */
-  useEffect(() => {
-    return () => {
-      // إلغاء التايمر عند unmount
-      if (timer) {
-        clearTimeout(timer);
-        setTimer(null);
-      }
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        setHeartbeatInterval(null);
-      }
-    };
-  }, [timer, heartbeatInterval]);
 
   /*
    * ===================================================
@@ -507,29 +458,11 @@ function QuizPage() {
     if (isFinished) {
       goBack();
     } else {
-      // 🔑 إلغاء التايمر قبل عرض تأكيد الخروج
-      if (timer) {
-        clearTimeout(timer);
-        setTimer(null);
-      }
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        setHeartbeatInterval(null);
-      }
       setShowExitConfirm(true);
     }
   };
 
   const confirmExit = () => {
-    // 🔑 إلغاء كل التايمرات قبل الخروج نهائياً
-    if (timer) {
-      clearTimeout(timer);
-      setTimer(null);
-    }
-    if (heartbeatInterval) {
-      clearInterval(heartbeatInterval);
-      setHeartbeatInterval(null);
-    }
     setShowExitConfirm(false);
     goBack();
   };
