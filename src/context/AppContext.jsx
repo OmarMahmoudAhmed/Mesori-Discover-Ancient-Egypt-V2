@@ -455,7 +455,23 @@ export function AppProvider({ children }) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    /*
+     * نبضة احترازية: الويب سوكيت بتاع Realtime ممكن ينقطع (خصوصاً على
+     * الموبايل لما التطبيق يترمى في الخلفية والـ OS يوقف تنفيذ الجافا
+     * سكريبت)، وRealtime مبيعملش "إعادة إرسال" للأحداث اللي فاتت وقت
+     * الانقطاع — بيبعت بس لحظة حدوث الـ INSERT فعلياً. فلو رجعنا نشوف
+     * الصفحة/التطبيق تاني (visible) بعد ما كان مخفي، نعمل refetch يدوي
+     * عشان نلحّق أي إشعار وصل أثناء الانقطاع.
+     */
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadNotifications();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [session?.user?.id]);
 
   // =============================================
