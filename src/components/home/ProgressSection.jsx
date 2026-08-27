@@ -2,24 +2,12 @@
  * =====================================================
  * ProgressSection.jsx - قسم التقدم الكلي
  * =====================================================
- *
- * يعرض هذا المكوّن تقدم المستخدم الإجمالي، بنفس تصميم صورة
- * الموافقة (Home.png) بالضبط:
- *
- * ┌──────────────────────────────────────────┐
- * │        التقدم الإجمالي: 300 نقطة         │   ← نص فوق الشريط، بدون بطاقة/حدود
- * │  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░  │   ← شريط بسيط بلونين فقط
- * └──────────────────────────────────────────┘
- *
- * حساب النسبة المئوية:
- * ────────────────────────────────────────────
- * نقاط المستخدم = 300
- * أقصى نقاط ممكنة = 5 مستويات × 100 = 500
- * النسبة = (300 / 500) × 100 = 60%
- *
- * ملاحظة: الشريط يمتلئ دائماً من اليسار لليمين (dir="ltr")
- * بغض النظر عن اتجاه الصفحة RTL، لأن هذا هو المعيار البصري
- * المتعارف عليه لأشرطة التقدم (كما في الصورة المرجعية)
+ * ⬅️ هوامش وأحجام مخفّضة شوية (mb-4→pb-1، النص 15px→13px، شريط
+ *   التقدّم 12px→10px ارتفاع) كجزء من ضغط الصفحة الرئيسية عشان
+ *   تتظبط بدون تمرير — main في HomePage.jsx بيحجز مسافة BottomNav
+ *   بنفسه أصلاً (paddingBottom)، فمش محتاجة هامش سفلي إضافي هنا.
+ *   flex-shrink-0 عشان ياخد حجمه الطبيعي بس ضمن العمود الرأسي
+ *   الجديد في HomePage (Hero + Grid + Progress).
  * =====================================================
  */
 
@@ -28,51 +16,31 @@ import { useApp } from '../../context/AppContext';
 
 function ProgressSection() {
 
-  /*
-   * نجلب من Context:
-   * userProfile.totalPoints = النقاط الحالية للمستخدم
-   * progressPercentage      = النسبة المئوية (0-100) محسوبة مسبقاً في Context
-   */
   const { userProfile, progressPercentage } = useApp();
 
-  /*
-   * لون الشريط يتدرّج مع التقدم (لمسة بسيطة، لا تغيّر شكل التصميم المطابق للصورة)
-   * < 40%  → ذهبي
-   * < 70%  → أخضر فاتح
-   * >= 70% → أخضر داكن (نفس أخضر الصورة المرجعية تقريباً)
-   */
   const barColor =
     progressPercentage < 40 ? '#C8922A' :
     progressPercentage < 70 ? '#4CAF50' :
     '#2D8A46';
 
   return (
-    <section className="px-4 mb-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+    <section className="px-4 pt-1 pb-1 flex-shrink-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
 
-      {/* ===== النص أعلى الشريط ===== */}
       <p
-        className="text-center font-bold mb-2"
-        style={{
-          fontFamily: "'Cairo', sans-serif",
-          fontSize:   '15px',
-          color:      '#3D2B1F',
-        }}
+        className="text-center font-bold mb-1.5"
+        style={{ fontFamily: "'Cairo', sans-serif", fontSize: '13px', color: '#3D2B1F' }}
       >
         التقدم الإجمالي: {userProfile.totalPoints} نقطة
       </p>
 
-      {/* ===== شريط التقدم (مسار فاتح + جزء ممتلئ ملوّن) ===== */}
       <div
         dir="ltr"
-        className="w-full h-3 rounded-full overflow-hidden"
+        className="w-full h-2.5 rounded-full overflow-hidden"
         style={{ backgroundColor: 'rgba(61,43,31,0.15)' }}
       >
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{
-            width:           `${progressPercentage}%`,
-            backgroundColor: barColor,
-          }}
+          style={{ width: `${progressPercentage}%`, backgroundColor: barColor }}
         />
       </div>
 

@@ -2,13 +2,23 @@
  * =====================================================
  * LevelCard.jsx - بطاقة المستوى الواحد (مع تأثيرات طيفية)
  * =====================================================
+ * ⬅️ أُعيد تنظيم الطبقة الداخلية (h-full flex flex-col) عشان
+ *   البطاقة تملأ أي ارتفاع تدّيهولها الشبكة (LevelsGrid) بالظبط —
+ *   بدل ارتفاع حر مبني على حجم الأيقونة الثابت (كان 108px) اللي
+ *   كان بياخد مساحة أكبر من اللازم ويمنع الصفحة من الاتظبط بدون
+ *   تمرير. الأيقونة دلوقتي بتتقلص/تكبر مع المساحة المتاحة فعلياً
+ *   (max-width/max-height + object-contain) بدل حجم ثابت، وصفّي
+ *   الإحصائيات (اختبارات/نقاط) بقوا صف واحد بدل اتنين. تأثيرات
+ *   الطيف/اللمعان/التموّج (spectralStyles) واستجابة النقر (ripple)
+ *   لم تتغيّر إطلاقاً.
+ * =====================================================
  */
 
 import React, { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 
 /* ============================================================
-   أنماط CSS للتأثيرات (حقن مرة واحدة)
+   أنماط CSS للتأثيرات (حقن مرة واحدة) - بدون أي تغيير عن الأصل
    ============================================================ */
 const spectralStyles = `
   @keyframes spectralBorderFlow {
@@ -79,7 +89,7 @@ const spectralStyles = `
 
   .card-inner {
     position: relative;
-    border-radius: 16px;  /* يناسب rounded-2xl */
+    border-radius: 16px;
     overflow: hidden;
     z-index: 2;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
@@ -152,7 +162,6 @@ const spectralStyles = `
       rippleEcho 1s cubic-bezier(0.1, 0.5, 0.3, 1) forwards;
   }
 
-  /* تأثير أيقونة المستوى عند التحويم */
   .spectral-card-wrapper:hover .level-icon-img {
     transform: scale(1.08) translateY(-3px);
     filter: drop-shadow(0 8px 16px rgba(0,0,0,0.35)) brightness(1.1);
@@ -169,7 +178,6 @@ const spectralStyles = `
 function LevelCard({ level }) {
   const { navigateTo } = useApp();
 
-  /* --- حالة التموجات (Ripples) --- */
   const [ripples, setRipples] = useState([]);
   const rippleIdRef = useRef(0);
 
@@ -208,7 +216,6 @@ function LevelCard({ level }) {
     }, 1000);
   };
 
-  /* استخراج ألوان الطيف من لون المستوى */
   const hexToRgb = (hex) => {
     if (!hex || !hex.startsWith('#')) return { r: 180, g: 140, b: 60 };
     const h = hex.replace('#', '');
@@ -249,21 +256,20 @@ function LevelCard({ level }) {
     <>
       <style>{spectralStyles}</style>
 
-      {/* غلاف الطيف الخارجي */}
+      {/* غلاف الطيف الخارجي — h-full عشان يملأ ارتفاع خانة الشبكة بالظبط */}
       <div
-        className="spectral-card-wrapper"
+        className="spectral-card-wrapper h-full"
         style={{
           background: spectralBorderGradient,
           ...glowCSSVars,
         }}
         onClick={handlePress}
       >
-        {/* الكرت الداخلي – يحافظ على كل التنسيق الأصلي */}
+        {/* الكرت الداخلي – flex عمودي يملأ الارتفاع كامل */}
         <div
-          className="card-inner rounded-2xl overflow-hidden"
+          className="card-inner rounded-2xl overflow-hidden h-full flex flex-col"
           style={{ backgroundColor: level.bgColor }}
         >
-          {/* طبقات التأثير */}
           <div className="shimmer-overlay" />
           <div className="shimmer-flash" />
           <div className="ripple-container">
@@ -285,17 +291,14 @@ function LevelCard({ level }) {
             ))}
           </div>
 
-          {/* ===== رأس البطاقة (التنسيق الأصلي محفوظ) ===== */}
+          {/* ===== رأس البطاقة (أقصر شوية من قبل: py-1.5 بدل py-2.5) ===== */}
           <div
-            className="px-3 py-2.5 flex items-center justify-between"
-            style={{ backgroundColor: level.headerBg, height: 35 }}
+            className="px-2.5 py-1.5 flex items-center justify-between flex-shrink-0"
+            style={{ backgroundColor: level.headerBg }}
           >
             <span
-              className="font-bold text-white tracking-wide"
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: '13px',
-              }}
+              className="font-bold text-white tracking-wide truncate"
+              style={{ fontFamily: "'Cinzel', serif", fontSize: '11px' }}
             >
               {level.nameEn}
             </span>
@@ -304,83 +307,59 @@ function LevelCard({ level }) {
               <img
                 src="/assets/icons/badges/lock.png"
                 alt="مقفول"
-                width={27.5}
-                height={27.5}
-                style={{ margin: 0 }}
-                className="opacity-80"
+                width={18}
+                height={18}
+                className="opacity-80 flex-shrink-0"
               />
             )}
           </div>
 
-          {/* ===== منتصف البطاقة (التنسيق الأصلي محفوظ) ===== */}
-          <div className="flex flex-col items-center justify-center px-3 py-3 gap-1.5">
+          {/* ===== منطقة الأيقونة — تملأ المساحة المتبقية وتتقلص/تكبر معها ===== */}
+          <div className="flex-1 min-h-0 flex items-center justify-center px-2 py-1">
             <img
-              className="level-icon-img"
+              className="level-icon-img max-w-[62%] max-h-full w-auto h-auto"
               src={level.iconSrc}
               alt={level.nameAr}
-              width={108}
-              height={108}
               style={{ objectFit: 'contain' }}
             />
+          </div>
 
+          {/* ===== اسم المستوى ===== */}
+          <div className="px-1 pb-1 flex-shrink-0">
             <span
-              className="font-black text-center"
-              style={{
-                fontFamily: "'Cairo', sans-serif",
-                fontSize: '15px',
-                color: level.textColor,
-              }}
+              className="font-black text-center block truncate"
+              style={{ fontFamily: "'Cairo', sans-serif", fontSize: '13px', color: level.textColor }}
             >
               {level.nameAr}
             </span>
           </div>
 
-          {/* ===== أسفل البطاقة (التنسيق الأصلي محفوظ) ===== */}
+          {/* ===== صف واحد للإحصائيات (بدل صفّين سابقاً) ===== */}
           <div
-            className="px-3 py-2 space-y-1.5"
+            className="px-2 py-1.5 flex items-center justify-center gap-3 flex-shrink-0"
             style={{ backgroundColor: level.badgeBg }}
           >
-            {/* إحصائية: عدد الاختبارات */}
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: level.badgeText }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
-                </svg>
-              </div>
+            <div className="flex items-center gap-1 min-w-0">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill={level.badgeText} className="flex-shrink-0">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z" />
+              </svg>
               <span
-                className="font-semibold"
-                style={{
-                  fontFamily: "'Cairo', sans-serif",
-                  fontSize: '11px',
-                  color: level.badgeText,
-                }}
+                className="font-semibold truncate"
+                style={{ fontFamily: "'Cairo', sans-serif", fontSize: '9px', color: level.badgeText }}
               >
                 {level.quizCount} اختبارات
               </span>
             </div>
 
-            {/* إحصائية: النقاط الممكنة */}
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: level.badgeText }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              </div>
+            <div className="flex items-center gap-1 min-w-0">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill={level.badgeText} className="flex-shrink-0">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
               <span
-                className="font-semibold"
-                style={{
-                  fontFamily: "'Cairo', sans-serif",
-                  fontSize: '11px',
-                  color: level.badgeText,
-                }}
+                className="font-semibold truncate"
+                style={{ fontFamily: "'Cairo', sans-serif", fontSize: '9px', color: level.badgeText }}
               >
-                {level.maxPoints} نقطة ممكنة
+                {level.maxPoints} نقطة
               </span>
             </div>
           </div>

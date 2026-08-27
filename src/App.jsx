@@ -47,15 +47,24 @@ import ProfilePage     from './pages/ProfilePage';
 import VsLobbyPage         from './pages/VsLobbyPage';
 import VsMatchPage         from './pages/VsMatchPage';
 import DeveloperInfoPage   from './pages/DeveloperInfoPage';
+import LoadingAnkh          from './components/shared/LoadingAnkh';
 
-/* شاشة تحميل بسيطة أثناء فحص الجلسة/البروفايل */
+/*
+ * شاشة تحميل بسيطة أثناء فحص الجلسة/البروفايل
+ * ⬅️ كانت إيموجي 🏺 ثابت (شكله بيختلف حسب نظام التشغيل/المتصفح)،
+ *   استُبدلت بعنخ SVG متحرك (نفس هوية شعار التطبيق) بتوهّج ولمعة
+ *   ذهبية، بدل تدوير كامل (شكل العنخ غير متماثل).
+ * ⬅️ min-h-screen (=100vh) كانت بتُقصّ جزء من الشاشة على متصفحات
+ *   الموبايل — نفس الباگ اللي اتصلّح في AppWrapper سابقاً، فات هنا
+ *   واتصلّح دلوقتي.
+ */
 function SplashLoader() {
   return (
     <div
-      className="min-h-screen w-full flex items-center justify-center"
+      className="min-h-dvh w-full flex items-center justify-center"
       style={{ backgroundColor: '#0F2D18' }}
     >
-      <div className="text-5xl animate-pulse">🏺</div>
+      <LoadingAnkh size={72} />
     </div>
   );
 }
