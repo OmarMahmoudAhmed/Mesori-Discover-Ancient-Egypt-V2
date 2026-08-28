@@ -44,7 +44,7 @@ function LevelCard({ level }) {
     >
       {/* ===== رأس البطاقة: اسم المستوى بالإنجليزية على خلفية ملوّنة ===== */}
       <div
-        className="relative flex items-center justify-center py-1.5 px-2 flex-shrink-0"
+        className="relative flex items-center justify-center py-1 px-2 flex-shrink-0"
         style={{ backgroundColor: level.headerBg }}
       >
         <span
@@ -66,7 +66,7 @@ function LevelCard({ level }) {
       </div>
 
       {/* ===== الجسم الأبيض: اسم الصعوبة + صورة المستوى ===== */}
-      <div className="flex-1 min-h-0 flex flex-col items-center px-1.5 pt-1 pb-0.5">
+      <div className="flex-1 min-h-0 flex flex-col items-center px-1.5 pt-0.5 pb-0">
         <span
           className="font-black truncate max-w-full"
           style={{ fontFamily: "'Cairo', sans-serif", fontSize: '13px', color: level.textColor }}
@@ -75,18 +75,18 @@ function LevelCard({ level }) {
         </span>
 
         {/* منطقة الصورة — تتقلص/تكبر مع المساحة المتاحة، الصورة نفسها من غير أي تعديل */}
-        <div className="flex-1 min-h-0 w-full flex items-center justify-center py-0.5">
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center">
           <img
             src={level.iconSrc}
             alt={level.nameAr}
-            className="max-w-[72%] max-h-full w-auto h-auto"
+            className="max-w-[86%] max-h-full w-auto h-auto"
             style={{ objectFit: 'contain' }}
           />
         </div>
       </div>
 
       {/* ===== ذيل الإحصائيات: عدد الاختبارات + النقاط الممكنة، سطر لكل واحد ===== */}
-      <div className="flex flex-col items-center gap-0.5 pb-1.5 pt-0.5 flex-shrink-0">
+      <div className="flex flex-col items-center gap-0.5 pb-1 pt-0 flex-shrink-0">
         <div className="flex items-center gap-1">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="#8B5A3C" className="flex-shrink-0">
             <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z" />

@@ -24,12 +24,12 @@ function LevelsGrid() {
   const secondRow = levelsData.slice(3);
 
   return (
-    <section className="px-4 pt-2 pb-3 flex-shrink-0 flex flex-col items-center gap-3">
+    <section className="px-4 pt-1 pb-2 flex-shrink-0 flex flex-col items-center gap-2">
 
       {/* ===== الصف الأول: المستويات 1, 2, 3 ===== */}
       <div className="flex justify-center gap-3">
         {firstRow.map((level) => (
-          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '3 / 4' }}>
+          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '4 / 5' }}>
             <LevelCard level={level} />
           </div>
         ))}
@@ -38,7 +38,7 @@ function LevelsGrid() {
       {/* ===== الصف الثاني: المستويات 4, 5 — نفس المقاس بالظبط ===== */}
       <div className="flex justify-center gap-3">
         {secondRow.map((level) => (
-          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '3 / 4' }}>
+          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '4 / 5' }}>
             <LevelCard level={level} />
           </div>
         ))}

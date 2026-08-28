@@ -62,12 +62,13 @@ function TypedWelcomeText() {
   return (
     <p
       dir="rtl"
-      className="text-center font-semibold mt-2 px-4"
+      className="text-center font-semibold px-4"
       style={{
         fontFamily: "'Cairo', sans-serif",
         fontSize: '13px',
         color: '#3D2B1F',
         lineHeight: 1.5,
+        marginTop: '4px',
         minHeight: '39px', /* حجز مساحة سطرين مقدماً عشان الشخصية تحتها ما تقفزش وقت الكتابة */
       }}
     >
@@ -87,7 +88,7 @@ function HeroSection() {
   const { userProfile } = useApp();
 
   return (
-    <section className="pt-4 pb-3 px-4 flex-shrink-0 flex flex-col items-center animate-fade-in-up">
+    <section className="pt-3 pb-2 px-4 flex-shrink-0 flex flex-col items-center animate-fade-in-up">
 
       {/* ===== الشعار الكبير + الاسمين، في المنتصف العلوي ===== */}
       <AnimatedLogo size={92} />
@@ -109,12 +110,12 @@ function HeroSection() {
       <TypedWelcomeText />
 
       {/* ===== الشخصية — سطر مستقل لوحدها ===== */}
-      <div className="mt-2">
+      <div className="mt-1">
         <ExplorerCharacter size={58} gender={userProfile.character} />
       </div>
 
       {/* فاصل بصري صغير (نقاط ذهبية) */}
-      <div className="flex items-center justify-center gap-2 mt-3 opacity-40">
+      <div className="flex items-center justify-center gap-2 mt-2 opacity-40">
         <span style={{ color: '#C8922A', fontSize: '7px' }}>◆</span>
         <span style={{ color: '#C8922A', fontSize: '10px' }}>◆</span>
         <span style={{ color: '#C8922A', fontSize: '7px' }}>◆</span>
