@@ -1,11 +1,12 @@
 /*
  * =====================================================
- * LevelsGrid.jsx - شبكة المستويات الخمسة
+ * LevelsGrid.jsx - شبكة المستويات الخمسة (تصميم جديد)
  * =====================================================
- * ⬅️ الكروت دلوقتي أصغر ومربّعة (aspect-square) بحجم ثابت واحد
- *   (clamp بين 72px و104px حسب عرض الشاشة) بدل ما تملأ أي مساحة
- *   رأسية متاحة — وبما إن الصفين بيستخدموا نفس المقاس بالظبط،
- *   التساوي بين الكروت الخمسة مضمون تلقائياً بدون أي حساب إضافي.
+ * ⬅️ الكروت بقت مستطيلة (أطول من عرضها، نسبة 3:4) بدل مربّعة
+ *   صغيرة، عشان تتماشى مع التصميم المرجعي الجديد (رأس ملوّن +
+ *   جسم أبيض يعرض صورة المستوى وإحصائياته بوضوح). العرض لسه
+ *   بيتحسب بـ clamp() حسب عرض الشاشة، والارتفاع بيتبع نسبة
+ *   الأبعاد تلقائياً (aspect-ratio) بدل حساب يدوي.
  * =====================================================
  */
 
@@ -13,7 +14,7 @@ import React from 'react';
 import LevelCard  from './LevelCard';
 import { useApp } from '../../context/AppContext';
 
-const CARD_SIZE = 'clamp(72px, 26vw, 104px)';
+const CARD_WIDTH = 'clamp(92px, 27vw, 122px)';
 
 function LevelsGrid() {
 
@@ -23,21 +24,21 @@ function LevelsGrid() {
   const secondRow = levelsData.slice(3);
 
   return (
-    <section className="px-4 flex-shrink-0 flex flex-col items-center gap-2.5">
+    <section className="px-4 pt-2 pb-3 flex-shrink-0 flex flex-col items-center gap-3">
 
       {/* ===== الصف الأول: المستويات 1, 2, 3 ===== */}
-      <div className="flex justify-center gap-2.5">
+      <div className="flex justify-center gap-3">
         {firstRow.map((level) => (
-          <div key={level.id} className="aspect-square" style={{ width: CARD_SIZE }}>
+          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '3 / 4' }}>
             <LevelCard level={level} />
           </div>
         ))}
       </div>
 
       {/* ===== الصف الثاني: المستويات 4, 5 — نفس المقاس بالظبط ===== */}
-      <div className="flex justify-center gap-2.5">
+      <div className="flex justify-center gap-3">
         {secondRow.map((level) => (
-          <div key={level.id} className="aspect-square" style={{ width: CARD_SIZE }}>
+          <div key={level.id} style={{ width: CARD_WIDTH, aspectRatio: '3 / 4' }}>
             <LevelCard level={level} />
           </div>
         ))}
