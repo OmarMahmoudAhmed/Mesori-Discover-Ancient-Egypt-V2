@@ -2,20 +2,20 @@
  * =====================================================
  * notifications.js - إشعارات محلية عبر Capacitor
  * =====================================================
- * تمهيد لإشعارات "حد تخطاك في الترتيب" على أندرويد.
+ * تمهيد لإشعارات "حد تخطاك / تخطيت حد في الترتيب" على أندرويد.
  *
- * ⚠️ حدود متعمّدة — مهم تعرفها قبل ما تعتمد عليها بالكامل:
- * الدالة دي بتشتغل بس لما المستخدم يفتح صفحة الليدربورد فعلياً
- * (بتكتشف إنه اتخطى منذ آخر زيارة، وتطلق إشعار محلي فوري وقتها).
- * ده تمهيد حقيقي شغّال فعلاً — منطق الاكتشاف وحلقة الاتصال بـ
- * Capacitor جاهزين تماماً — لكنه مختلف عن إشعار push حقيقي يوصلك
- * وانت مقفل التطبيق من كذا يوم من غير ما تفتحه خالص. ده محتاج
- * مشروع منفصل: Firebase Cloud Messaging + Supabase Edge Function
- * مجدولة تقارن الترتيب دورياً على السيرفر + استبدال
- * @capacitor/local-notifications بـ @capacitor/push-notifications.
- * الجزء اللي هنا (نقطة استدعاء واحدة واضحة عند اكتشاف overtaken)
- * هيفضل هو نفسه لما تضيف الطبقة دي لاحقاً — بس هتستبدل جوّاها
- * LocalNotifications.schedule بإرسال فعلي للسيرفر.
+ * ⚠️ حدود مهمة: الدالتين هنا بيتصلوا بيهم لما LeaderboardPage
+ * تكتشف تغيّر فعلي (سواء لحظة فتح الصفحة، أو لحظياً عبر اشتراك
+ * Realtime وانت واقف فيها — راجع LeaderboardPage.jsx). ده تمهيد
+ * حقيقي شغّال، لكنه لسه محتاج التطبيق يكون مفتوح (على أي صفحة،
+ * مش شرط الليدربورد بالظبط لو حبينا نوسّع الاشتراك لاحقاً) عشان
+ * يستقبل حدث الـ Realtime أصلاً. إشعار push حقيقي والتطبيق مقفول
+ * تماماً من كذا ساعة محتاج مشروع منفصل: Firebase Cloud Messaging +
+ * دالة سيرفر (Supabase Edge Function) بتستمع لتغييرات
+ * leaderboard_stats على مستوى قاعدة البيانات نفسها (مش من جهاز
+ * المستخدم) وترسل push عبر FCM. الطبقة الحالية (اكتشاف + استدعاء
+ * واحد واضح) هتفضل هي نفسها لما تضاف الطبقة دي — بس هيتغيّر جواها
+ * LocalNotifications.schedule لإرسال فعلي من السيرفر بدل المحلي.
  */
 
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -24,8 +24,7 @@ import { Capacitor } from '@capacitor/core';
 let permissionChecked = false;
 
 async function ensurePermission() {
-  // على المتصفح العادي (مش تطبيق Capacitor مُغلّف) مفيش إشعارات نظام حقيقية
-  if (!Capacitor.isNativePlatform()) return false;
+  if (!Capacitor.isNativePlatform()) return false; // على المتصفح العادي مفيش إشعارات نظام حقيقية
   if (permissionChecked) return true;
 
   try {
@@ -42,26 +41,40 @@ async function ensurePermission() {
   }
 }
 
-/*
- * تُستدعى من LeaderboardPage عند اكتشاف overtaken: true (حد نزّل
- * ترتيبك). newRank/previousRank أرقام الترتيب الجديد والقديم.
- */
+/* حد تخطاك في الترتيب (رقم ترتيبك زاد) */
 export async function notifyRankOvertaken({ newRank, previousRank }) {
   const granted = await ensurePermission();
   if (!granted) return;
 
   try {
     await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: Date.now() % 1000000,
-          title: 'حد تخطاك في الترتيب! 🏆',
-          body: `نزل ترتيبك من المركز ${previousRank} للمركز ${newRank} — ارجع العب وخد مكانك تاني!`,
-          schedule: { at: new Date(Date.now() + 500) },
-        },
-      ],
+      notifications: [{
+        id: Date.now() % 1000000,
+        title: 'حد تخطاك في الترتيب! 🏆',
+        body: `نزل ترتيبك من المركز ${previousRank} للمركز ${newRank} — ارجع العب وخد مكانك تاني!`,
+        schedule: { at: new Date(Date.now() + 500) },
+      }],
     });
   } catch (err) {
     console.error('❌ فشل إطلاق إشعار تخطي الترتيب:', err);
+  }
+}
+
+/* تخطيت حد في الترتيب (رقم ترتيبك قلّ) */
+export async function notifyRankImproved({ newRank, previousRank }) {
+  const granted = await ensurePermission();
+  if (!granted) return;
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: Date.now() % 1000000,
+        title: 'تخطيت حد في الترتيب! 🎉',
+        body: `طلعت من المركز ${previousRank} للمركز ${newRank} — كمّل كده وحافظ على مكانك!`,
+        schedule: { at: new Date(Date.now() + 500) },
+      }],
+    });
+  } catch (err) {
+    console.error('❌ فشل إطلاق إشعار تحسّن الترتيب:', err);
   }
 }

@@ -6,32 +6,40 @@
  * تعرض ترتيب جميع اللاعبين حسب النقاط.
  * المستخدم الحالي (isCurrentUser: true) يُبرز بلون أخضر.
  *
- * ⬅️ إصلاح صف الرأس (شعار + عنوان + شخصية): كان بلا أي حماية من
- *   الانكماش (flex-shrink-0 / min-w-0)، فعلى شاشة هاتف بعرض عادي
- *   كان إجمالي عرض العناصر الثلاثة (شعار 110 + شخصية 80 + عمود
- *   عنوان بعرضه الأدنى الطبيعي بسبب "Leaderboard" الكبيرة ووصف
- *   سطرين) يتخطى عرض الحاوية الفعلي. ومع overflow-x-hidden على
- *   AppWrapper، الجزء الزايد كان بيتقص بصمت بدل ما يعمل سكرول —
- *   وبما إن الصفحة كلها RTL وشخصية المستكشف هي آخر عنصر DOM (يعني
- *   أقصى يسار الصفحة في RTL)، هي اللي كانت بتتقص وتظهر "خارج
- *   الإطار من ناحية اليسار" بالظبط زي ما وصف عمر، وده نفسه سبب
- *   شكل الصفحة "المايل لليسار" (وزن العناصر الظاهرة بيبقى متجمّع
- *   ناحية اليمين). الحل: flex-shrink-0 على الشعار والشخصية (يمنعهم
- *   من التصارع على المساحة)، min-w-0 على عمود العنوان الأوسط (يسمح
- *   لنصّه ينكمش/يلف بدل ما يفرض عرض أدنى كبير)، وتصغير الحجمين
- *   الأساسيين (110→82 / 80→62) + عنوان أصغر (text-2xl→text-xl)
- *   كهامش أمان إضافي على الشاشات الأضيق.
+ * ⬅️ إصلاح صف الرأس (شعار + عنوان + شخصية): flex-shrink-0 على
+ *   الشعار والشخصية + min-w-0 على العنوان الأوسط — راجع تعليقات
+ *   التصحيح القديمة لو حبيت التفاصيل الكاملة لسبب "الميلان لليسار".
  *
- * ⬅️ إضافة: شارة صغيرة متحركة (RankChangeBadge) بجانب ترتيب
- *   المستخدم الحالي، تقارن ترتيبه/نقاطه الحاليين بآخر زيارة محفوظة
- *   محلياً (rankTracking.js) — أخضر لو تحسّن، أحمر لو حد تخطاه.
- *   لو "تخطاه حد فعلاً" (rankDelta < 0)، تُطلق أيضاً إشعار محلي
- *   عبر Capacitor (notifications.js) — تمهيد لإشعارات أندرويد
- *   (راجع التعليقات في الملفين للحدود المتعمّدة لهذا النظام).
+ * ⬅️ تأثير تغيّر الترتيب — مرتبط بقاعدة البيانات فعلياً بطريقتين:
+ *
+ *   1) عند فتح الصفحة: نقارن ترتيبك الحالي بآخر ترتيب معروف محفوظ
+ *      محلياً (localStorage عبر rankTracking.js) — بيغطي "مين
+ *      عدّاك من آخر مرة دخلت فيها" حتى لو قفلت التطبيق كامل بين
+ *      الزيارتين. النتيجة تتحوّل لشارة صغيرة دائمة (RankChangeBadge)
+ *      جنب رقم ترتيبك.
+ *
+ *   2) وانت واقف في الصفحة فعلياً: اشتراك Supabase Realtime على
+ *      جدول leaderboard_stats (مش profiles مباشرة، ولا leaderboard
+ *      view — الاتنين مايصلحوش للاشتراك: الأول RLS بتاعه (auth.uid
+ *      ()=id) هيخلّي كل حد يستقبل تغييرات صفّه بس، والتاني view
+ *      مالوش أي WAL خاص بيه أصلاً. leaderboard_stats جدول حقيقي
+ *      ضيّق بس بالأعمدة العلنية أصلاً في الـ view، وقابل للقراءة
+ *      من الجميع ومسجّل في publication الـ Realtime — تفاصيل
+ *      القرار والتحقق منه على المشروع الحي في migration
+ *      010_leaderboard_realtime_stats.sql). أي تغيير هناك (نقاط أي
+ *      حد، مش بس أنت) بيرجّعنا نجيب الليدربورد كامل تاني، ونقارن
+ *      ترتيبك الجديد بآخر حالة معروضة فعلياً في نفس الجلسة — ده
+ *      اللي بيدّي "ايفيكت لحظي" حقيقي (RankChangeToast) وقتها
+ *      بالظبط، مش لما تفتح الصفحة بس.
+ *
+ *   في الحالتين: أخضر لو رقم ترتيبك قلّ (تخطيت حد)، أحمر لو زاد
+ *   (حد تخطاك) — وفي الحالتين كمان بيتبعت إشعار محلي عبر Capacitor
+ *   (notifications.js) بنفس الاتجاه، كتمهيد لإشعارات أندرويد
+ *   الحقيقية لاحقاً (التفاصيل والحدود المتعمّدة مكتوبة هناك).
  * =====================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppWrapper        from '../components/layout/AppWrapper';
 import Header            from '../components/layout/Header';
 import BottomNav         from '../components/layout/BottomNav';
@@ -42,8 +50,9 @@ import { supabase }      from '../lib/supabaseClient';
 import { AvatarDisplay } from '../data/avatars';
 import PlayerProfileModal from '../components/leaderboard/PlayerProfileModal';
 import RankChangeBadge   from '../components/leaderboard/RankChangeBadge';
+import RankChangeToast   from '../components/leaderboard/RankChangeToast';
 import { getLastSeenRank, saveLastSeenRank, computeRankChange } from '../lib/rankTracking';
-import { notifyRankOvertaken } from '../lib/notifications';
+import { notifyRankOvertaken, notifyRankImproved } from '../lib/notifications';
 
 const TROPHY_STYLES = {
   gold:   { iconClass: 'fi-sr-first-medal',  color: '#F5B700', label: 'المركز الأول'  },
@@ -72,68 +81,107 @@ function LeaderboardPage() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [rankChange, setRankChange] = useState(null);
+  const [rankChange, setRankChange] = useState(null);   // آخر تغيّر معروف (يغذّي الشارة الصغيرة)
+  const [toast, setToast] = useState(null);              // تنبيه لحظي عابر (يغذّي RankChangeToast)
 
-  useEffect(() => {
-    async function loadLeaderboard() {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('rank');
+  const myLastKnownRef = useRef(null);   // آخر {rank, points} معروض فعلياً في نفس الجلسة
+  const toastTimeoutRef = useRef(null);
 
-      if (error) {
-        console.error('❌ خطأ في تحميل قائمة المتصدرين:', error);
-        setPlayers([]);
-        setLoading(false);
-        return;
+  /*
+   * جلب قائمة المتصدرين + اكتشاف تغيّر ترتيبي.
+   * isLiveUpdate=false  → أول تحميل: قارن بـ localStorage (عبر الزيارات/الجلسات)
+   * isLiveUpdate=true   → حدث Realtime وانت واقف في الصفحة: قارن بآخر حالة في نفس الجلسة
+   */
+  async function refreshLeaderboard(isLiveUpdate) {
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .select('*')
+      .order('rank');
+
+    if (error) {
+      console.error('❌ خطأ في تحميل قائمة المتصدرين:', error);
+      if (!isLiveUpdate) { setPlayers([]); setLoading(false); }
+      return;
+    }
+
+    const TROPHY_BY_RANK = { 1: 'gold', 2: 'silver', 3: 'bronze' };
+    setPlayers((data || []).map(row => ({
+      id: row.id,
+      rank: row.rank,
+      trophy: TROPHY_BY_RANK[row.rank] || null,
+      avatar: row.character,
+      name: row.username,
+      levelReached: row.level_reached,
+      points: row.total_points,
+      isCurrentUser: row.id === session?.user?.id,
+    })));
+    if (!isLiveUpdate) setLoading(false);
+
+    const mine = (data || []).find(row => row.id === session?.user?.id);
+    if (!mine) return;
+
+    const current = { rank: mine.rank, points: mine.total_points };
+    const previous = isLiveUpdate ? myLastKnownRef.current : getLastSeenRank(session.user.id);
+    const change = computeRankChange(previous, current);
+
+    if (change) {
+      setRankChange({ ...change, id: Date.now() }); // id فريد عشان الشارة تعمل أنيميشن من جديد كل مرة
+
+      if (isLiveUpdate) {
+        if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+        setToast({
+          id: Date.now(),
+          direction: change.overtaken ? 'down' : 'up',
+          message: change.overtaken
+            ? 'حد تخطاك في الترتيب! 😬 كمّل العب وارجع مكانك'
+            : `تخطيت حد في الترتيب! 🎉 دلوقتي في المركز ${current.rank}`,
+        });
+        toastTimeoutRef.current = setTimeout(() => setToast(null), 4000);
       }
 
-      const TROPHY_BY_RANK = { 1: 'gold', 2: 'silver', 3: 'bronze' };
-      setPlayers((data || []).map(row => ({
-        id: row.id,
-        rank: row.rank,
-        trophy: TROPHY_BY_RANK[row.rank] || null,
-        avatar: row.character,
-        gender: row.gender,
-        name: row.username,
-        levelReached: row.level_reached,
-        points: row.total_points,
-        isCurrentUser: row.id === session?.user?.id,
-      })));
-      setLoading(false);
-
-      /*
-       * تتبّع تغيّر الترتيب/النقاط منذ آخر زيارة لهذه الصفحة —
-       * راجع rankTracking.js لتفاصيل الحدود المتعمّدة لهذا النظام
-       */
-      const mine = (data || []).find(row => row.id === session?.user?.id);
-      if (mine) {
-        const previous = getLastSeenRank(session.user.id);
-        const change = computeRankChange(previous, { rank: mine.rank, points: mine.total_points });
-        if (change) {
-          setRankChange(change);
-          if (change.overtaken) {
-            notifyRankOvertaken({ newRank: mine.rank, previousRank: previous.rank });
-          }
-        }
-        saveLastSeenRank(session.user.id, { rank: mine.rank, points: mine.total_points });
+      if (change.overtaken) {
+        notifyRankOvertaken({ newRank: current.rank, previousRank: previous.rank });
+      } else {
+        notifyRankImproved({ newRank: current.rank, previousRank: previous.rank });
       }
     }
 
-    loadLeaderboard();
+    myLastKnownRef.current = current;
+    saveLastSeenRank(session.user.id, current);
+  }
+
+  /* التحميل الأول + الاشتراك اللحظي في تغييرات leaderboard_stats */
+  useEffect(() => {
+    setLoading(true);
+    refreshLeaderboard(false);
+
+    const channel = supabase
+      .channel('leaderboard-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leaderboard_stats' },
+        () => refreshLeaderboard(true)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
   }, [session?.user?.id]);
 
   return (
     <AppWrapper>
       <Header showBack={true} onBack={goBack} />
 
+      <RankChangeToast toast={toast} onDismiss={() => setToast(null)} />
+
       <main
         className="flex-1 overflow-y-auto app-scroll"
         style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
-        {/* قسم الرأس — flex-shrink-0 على الطرفين، min-w-0 على المنتصف */}
+        {/* قسم الرأس */}
         <div className="flex items-end justify-between px-4 pt-2 gap-2">
           <img
             src={EgyptianLogo}
@@ -223,6 +271,7 @@ function LeaderboardPage() {
                     cursor: isMe ? 'default' : 'pointer',
                     border: isMe ? '2px solid #4ADE80' : '1px solid rgba(200,146,42,0.15)',
                     boxShadow: isMe ? '0 0 12px rgba(45,106,63,0.3)' : 'none',
+                    transition: 'background-color 0.6s ease, box-shadow 0.6s ease',
                   }}
                 >
 
@@ -238,7 +287,9 @@ function LeaderboardPage() {
                         {player.rank}
                       </span>
                     )}
-                    {isMe && <RankChangeBadge rankDelta={rankChange?.rankDelta} />}
+                    {isMe && rankChange && (
+                      <RankChangeBadge key={rankChange.id} rankDelta={rankChange.rankDelta} />
+                    )}
                   </div>
 
                   {/* عمود اللاعب */}

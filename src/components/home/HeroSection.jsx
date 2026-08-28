@@ -1,60 +1,84 @@
 /*
  * =====================================================
- * HeroSection.jsx - قسم الترحيب (Hero) المضغوط في الصفحة الرئيسية
+ * HeroSection.jsx - قسم الترحيب (Hero)
  * =====================================================
- * ⬅️ أُعيد تصميمه ليكون مضغوطاً بما يكفي لظهور الصفحة الرئيسية
- *   كاملة (Hero + المستويات + التقدّم) بدون تمرير على شاشة هاتف
- *   عادية — بدل الشعار الكبير (155px) + عنوانين منفصلين (Mesori +
- *   شارة "ميسوري" الكبيرة) + بطاقة ترحيب منفصلة كانت بتاخد وحدها
- *   أكتر من ثلث ارتفاع الشاشة. الاسمين دلوقتي بجانب الشعار في عمود
- *   واحد مضغوط، وبطاقة الترحيب والشخصية في صف واحد جنبهم.
- * ⬅️ الشعار دلوقتي متحرك: توهّج ذهبي نابض (pulse-gold، مُعرّف
- *   بالفعل في tailwind.config.js) + طفو خفيف لأعلى/أسفل عبر
- *   framer-motion، بدل ما كان صورة ثابتة تماماً. يحترم
- *   prefers-reduced-motion.
- * ⬅️ flex-shrink-0 على عمود الشعار والشخصية، min-w-0 على النص
- *   المرن بينهم — نفس درس إصلاح صف رأس LeaderboardPage (راجع
- *   LeaderboardPage.jsx): بدونهم، نص طويل ممكن يفرض عرض أدنى يدفع
- *   عناصر تانية بره الإطار على شاشة ضيّقة.
+ * ⬅️ شعار كبير في المنتصف العلوي (بدون توهّج ذهبي، طفو خفيف بس)،
+ *   والنص الترحيبي منفصل تماماً عن الشخصية.
+ * ⬅️ إضافة: تأثير كتابة (Typed.js) على النص الترحيبي — بيتكتب
+ *   حرف حرف عند دخول الصفحة بدل ما يظهر دفعة واحدة. min-height
+ *   ثابت على الفقرة عشان الشخصية تحتها ما تقفزش لأعلى/أسفل وهي
+ *   بتتكتب. يحترم prefers-reduced-motion (بيظهر النص كامل فوراً
+ *   من غير أنيميشن لمن يفضّل تقليل الحركة).
  * =====================================================
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import Typed from 'typed.js';
 import logoImage from '../shared/EgyptianLogo.png';
 import ExplorerCharacter from '../shared/ExplorerCharacter';
 import { useApp } from '../../context/AppContext';
 
-/* الشعار المتحرك: توهّج + طفو خفيف (بدل تدوير كامل — شكله غير متماثل) */
-function AnimatedLogo({ size = 50 }) {
+/* الشعار: طفو خفيف بس (بدون أي توهّج ذهبي) */
+function AnimatedLogo({ size = 92 }) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div
-      className="relative flex items-center justify-center flex-shrink-0"
-      style={{ width: size * 1.2, height: size * 1.2 }}
+    <motion.img
+      src={logoImage}
+      alt="شعار ميسوري"
+      width={size}
+      height={size}
+      className="drop-shadow-lg"
+      style={{ display: 'block' }}
+      animate={prefersReducedMotion ? {} : { y: [0, -4, 0] }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  );
+}
+
+/* النص الترحيبي بتأثير كتابة (Typed.js) */
+function TypedWelcomeText() {
+  const typedEl = useRef(null);
+  const typedInstance = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (prefersReducedMotion || !typedEl.current) return;
+
+    typedInstance.current = new Typed(typedEl.current, {
+      strings: ['اختر معرفتك <span style="color:#8B4513;font-weight:700">بتاريخ مصر القديم!</span>'],
+      typeSpeed: 32,
+      startDelay: 200,
+      showCursor: true,
+      cursorChar: '|',
+      contentType: 'html',
+      loop: false,
+    });
+
+    return () => typedInstance.current?.destroy();
+  }, [prefersReducedMotion]);
+
+  return (
+    <p
+      dir="rtl"
+      className="text-center font-semibold mt-2 px-4"
+      style={{
+        fontFamily: "'Cairo', sans-serif",
+        fontSize: '13px',
+        color: '#3D2B1F',
+        lineHeight: 1.5,
+        minHeight: '39px', /* حجز مساحة سطرين مقدماً عشان الشخصية تحتها ما تقفزش وقت الكتابة */
+      }}
     >
-      <div
-        className={prefersReducedMotion ? '' : 'animate-pulse-gold'}
-        style={{
-          position: 'absolute',
-          width: size * 1.05,
-          height: size * 1.05,
-          borderRadius: '9999px',
-          backgroundColor: 'rgba(200,146,42,0.3)',
-        }}
-      />
-      <motion.img
-        src={logoImage}
-        alt="شعار ميسوري"
-        width={size}
-        height={size}
-        className="drop-shadow-lg relative"
-        style={{ display: 'block' }}
-        animate={prefersReducedMotion ? {} : { y: [0, -3, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    </div>
+      {prefersReducedMotion ? (
+        <>
+          اختر معرفتك <span style={{ color: '#8B4513', fontWeight: 700 }}>بتاريخ مصر القديم!</span>
+        </>
+      ) : (
+        <span ref={typedEl} />
+      )}
+    </p>
   );
 }
 
@@ -63,60 +87,30 @@ function HeroSection() {
   const { userProfile } = useApp();
 
   return (
-    <section className="pt-2 pb-2 px-4 animate-fade-in-up flex-shrink-0">
+    <section className="pt-3 pb-2 px-4 flex-shrink-0 flex flex-col items-center animate-fade-in-up">
 
-      <div className="flex items-center gap-2.5">
+      {/* ===== الشعار الكبير + الاسمين، في المنتصف العلوي ===== */}
+      <AnimatedLogo size={92} />
 
-        {/* ===== الشعار المتحرك + الاسمين (عمود ثابت العرض) ===== */}
-        <div className="flex flex-col items-center flex-shrink-0" style={{ width: 74 }}>
-          <AnimatedLogo size={50} />
-          <span
-            className="font-black mt-0.5"
-            style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: '14px',
-              color: '#3D2B1F',
-              letterSpacing: '0.5px',
-              lineHeight: 1.1,
-            }}
-          >
-            Mesori
-          </span>
-          <span
-            className="font-bold"
-            style={{ fontFamily: "'Cairo', sans-serif", fontSize: '10px', color: '#805D1B', lineHeight: 1.2 }}
-          >
-            ميسوري
-          </span>
-        </div>
+      <span
+        className="font-black mt-1"
+        style={{ fontFamily: "'Cinzel', serif", fontSize: '20px', color: '#3D2B1F', letterSpacing: '0.5px' }}
+      >
+        Mesori
+      </span>
+      <span
+        className="font-bold"
+        style={{ fontFamily: "'Cairo', sans-serif", fontSize: '12px', color: '#805D1B' }}
+      >
+        ميسوري
+      </span>
 
-        {/* ===== بطاقة الترحيب + الشخصية (تملأ الباقي، نصها ينكمش بأمان) ===== */}
-        <div
-          className="flex-1 min-w-0 rounded-2xl px-3 py-2 flex items-center gap-2"
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.7)',
-            border: '1.5px solid rgba(200,146,42,0.25)',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          <p
-            className="flex-1 min-w-0 font-semibold"
-            style={{
-              fontFamily: "'Cairo', sans-serif",
-              fontSize: '12px',
-              color: '#3D2B1F',
-              lineHeight: '1.45',
-            }}
-          >
-            اختر معرفتك{' '}
-            <span style={{ color: '#8B4513', fontWeight: 700 }}>بتاريخ مصر القديم!</span>
-          </p>
+      {/* ===== النص الترحيبي — بتأثير كتابة، سطر مستقل تماماً ===== */}
+      <TypedWelcomeText />
 
-          <div className="flex-shrink-0" style={{ marginBottom: '-6px' }}>
-            <ExplorerCharacter size={46} gender={userProfile.character} />
-          </div>
-        </div>
-
+      {/* ===== الشخصية — سطر مستقل لوحدها ===== */}
+      <div className="mt-1.5">
+        <ExplorerCharacter size={56} gender={userProfile.character} />
       </div>
 
       {/* فاصل بصري صغير (نقاط ذهبية) */}
