@@ -69,6 +69,7 @@ import ExplorerCharacter from '../components/shared/ExplorerCharacter';
 import { useApp }        from '../context/AppContext';
 import { supabase }      from '../lib/supabaseClient';
 import { playSound }     from '../lib/sounds';
+import { shuffleArray, shuffleQuestionOptions } from '../lib/shuffle';
 
 
 /*
@@ -250,13 +251,19 @@ function QuizPage() {
         }
 
         // تحويل البيانات إلى الشكل المتوقع من المكون
-        const formattedQuestions = data.map((q) => ({
-          id: q.id,
-          question: q.question,
-          options: q.options || [],
-          correctIndex: q.correct_index,
-          explanation: q.explanation || '',
-        }));
+        // ⬅️ ترتيب الأسئلة + ترتيب الاختيارات جوه كل سؤال بيتبعترا
+        //    هنا — كل مرة تفتح المرحلة، وحتى لو نفس المستخدم كرّر
+        //    نفس المرحلة تاني، الترتيب مختلف من غير ما يبان نمط
+        //    ثابت (زي "الإجابة الصح دايماً أول اختيار")
+        const formattedQuestions = shuffleArray(
+          data.map((q) => shuffleQuestionOptions({
+            id: q.id,
+            question: q.question,
+            options: q.options || [],
+            correctIndex: q.correct_index,
+            explanation: q.explanation || '',
+          }))
+        );
 
         console.log(`✅ تم تحميل ${formattedQuestions.length} سؤال للمرحلة ${levelId}-${stageId}`);
         setQuestions(formattedQuestions);
