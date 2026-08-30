@@ -27,9 +27,32 @@
  * =====================================================
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { playSound } from '../../lib/sounds';
 
 function AppWrapper({ children }) {
+
+  /*
+   * صوت نقرة عام — نقطة واحدة تغطي كل التطبيق بدل ما نضيف
+   * onClick لكل زرار في عشرات الملفات. مستمع واحد على document
+   * (آمن: صفحة واحدة بس متركّبة في أي وقت عبر switch/case في
+   * App.jsx، فمفيش خطر تكرار المستمع). بيغطي: button, العنصر
+   * العام press-effect (مستخدم في أغلب الصفوف/الأزرار)،
+   * [role="button"]، وكروت المستويات (spectral-card-wrapper).
+   * لو ضفت عنصر تفاعلي جديد بستايل مخصص مش من ضمن دول، ضيفله
+   * كلاس press-effect (هيدّيه برضه تأثير الضغط البصري الموجود)
+   * أو زوّد القائمة هنا.
+   */
+  useEffect(() => {
+    function handleGlobalClick(e) {
+      if (e.target.closest('button, .press-effect, [role="button"], .spectral-card-wrapper')) {
+        playSound('click');
+      }
+    }
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, []);
+
   return (
 
     /*

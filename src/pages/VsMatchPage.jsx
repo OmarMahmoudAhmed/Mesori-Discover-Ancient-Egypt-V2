@@ -25,6 +25,7 @@ import AppWrapper from '../components/layout/AppWrapper';
 import Header      from '../components/layout/Header';
 import { useApp }  from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
+import { playSound } from '../lib/sounds';
 import { AvatarDisplay } from '../data/avatars';
 
 // نبضة الحياة: كل 7 ثواني (يعني نافذة الـ30 ثانية بتسمح بفوات 3-4
@@ -123,6 +124,29 @@ function VsMatchPage() {
   const channelRef = useRef(null);
   const timerRef = useRef(null);
   const hasSubmittedRef = useRef(false);
+  const resultSoundPlayedForRef = useRef(null); // آخر match id اتشغّله صوت النتيجة بتاعه
+
+  /*
+   * صوت الفوز/الخسارة/التعادل — مرة واحدة بس لما الصفحة توصل فعلياً
+   * لمرحلة 'result' لأول مرة لكل مباراة (مش على كل إعادة رندر).
+   * مفيش صوت لدعوة اترفضت أو مباراة اتلغت (isVoid) — مفيش نتيجة
+   * حقيقية تستاهل فوز/خسارة هنا أصلاً.
+   */
+  useEffect(() => {
+    if (phase !== 'result' || !matchState) return;
+    if (resultSoundPlayedForRef.current === matchState.id) return;
+    resultSoundPlayedForRef.current = matchState.id;
+
+    const isVoidNow = matchState.end_reason === 'void';
+    if (matchState.status === 'declined' || isVoidNow) return;
+
+    const wonNow = matchState.winner_id === userProfile.id;
+    const isDrawNow = !matchState.winner_id && matchState.status === 'finished';
+
+    if (wonNow) playSound('win');
+    else if (isDrawNow) playSound('draw');
+    else playSound('loss'); // يشمل الخسارة العادية والخسارة بالانسحاب (forfeit)
+  }, [phase, matchState, userProfile.id]);
 
   const isPlayer1 = matchState?.player_1_id === userProfile.id;
   const opponentId = matchState ? (isPlayer1 ? matchState.player_2_id : matchState.player_1_id) : null;

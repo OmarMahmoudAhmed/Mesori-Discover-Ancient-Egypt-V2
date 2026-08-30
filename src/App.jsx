@@ -31,10 +31,11 @@
  * =====================================================
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 /* استيراد مزود البيانات والـ Hook */
 import { AppProvider, useApp } from './context/AppContext';
+import { setSoundEnabled } from './lib/sounds';
 
 /* استيراد جميع الصفحات */
 import LoginPage        from './pages/LoginPage';
@@ -78,7 +79,13 @@ function SplashLoader() {
  */
 function AppContent() {
 
-  const { currentPage, session, authLoading, profileLoading, userProfile } = useApp();
+  const { currentPage, session, authLoading, profileLoading, userProfile, isSoundOn } = useApp();
+
+  /* أي تغيير في مفتاح الصوت من الإعدادات (SettingsDropdown) يتطبّق
+     فوراً على كل الأصوات الجديدة اللي هتتشغّل من sounds.js */
+  useEffect(() => {
+    setSoundEnabled(isSoundOn);
+  }, [isSoundOn]);
 
   /*
    * بوابة تسجيل الدخول: بالترتيب —

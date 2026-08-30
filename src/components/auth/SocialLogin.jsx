@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FcGoogle } from 'react-icons/fc';
-import { FaFacebookF, FaApple } from 'react-icons/fa';
+// فيسبوك وآبل متوقفين مؤقتاً (راجع الملاحظة تحت) — رجّع السطر ده لما يترجعوا
+// import { FaFacebookF, FaApple } from 'react-icons/fa';
 
 
 /**
@@ -30,13 +31,18 @@ const handleGoogle = async () => {
     alert('فشل تسجيل الدخول: ' + error.message);
   }
 };
-  const handleFacebook = () => {};
-  const handleApple = () => {};
+  /*
+   * فيسبوك وآبل متوقفين مؤقتاً (مش محذوفين) — لسه ماجبناش الـ OAuth
+   * API بتاعهم. لما تتوفر مفاتيحهم، رجّع السطرين دول وعنصريهم في
+   * providers تحت زي ما كانوا.
+   */
+  // const handleFacebook = () => {};
+  // const handleApple = () => {};
 
   const providers = [
     { id: 'google', label: 'Google', icon: FcGoogle, onClick: handleGoogle },
-    { id: 'facebook', label: 'Facebook', icon: FaFacebookF, onClick: handleFacebook, color: '#1877F2' },
-    { id: 'apple', label: 'Apple', icon: FaApple, onClick: handleApple, color: '#1A1A1A' },
+    // { id: 'facebook', label: 'Facebook', icon: FaFacebookF, onClick: handleFacebook, color: '#1877F2' },
+    // { id: 'apple', label: 'Apple', icon: FaApple, onClick: handleApple, color: '#1A1A1A' },
   ];
 
   return (

@@ -68,6 +68,7 @@ import Header            from '../components/layout/Header';
 import ExplorerCharacter from '../components/shared/ExplorerCharacter';
 import { useApp }        from '../context/AppContext';
 import { supabase }      from '../lib/supabaseClient';
+import { playSound }     from '../lib/sounds';
 
 
 /*
@@ -441,6 +442,9 @@ function QuizPage() {
     setSelectedIndex(index);
     if (index === question.correctIndex) {
       setCorrectCount(prev => prev + 1);
+      playSound('correct');
+    } else {
+      playSound('wrong');
     }
   };
 
