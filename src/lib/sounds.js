@@ -19,12 +19,12 @@
  */
 
 const SOUND_FILES = {
-  click:   '/sounds/click.mp3',
-  correct: '/sounds/correct.mp3',
-  wrong:   '/sounds/wrong.mp3',
-  win:     '/sounds/win.mp3',
-  loss:    '/sounds/loss.mp3',
-  draw:    '/sounds/draw.mp3',
+  click:   '/sounds/Click.mp3',
+  correct: '/sounds/Correct.mp3',
+  wrong:   '/sounds/Wrong.mp3',
+  win:     '/sounds/Win.mp3',
+  loss:    '/sounds/Loss.mp3',
+  draw:    '/sounds/Draw.mp3',
 };
 
 // مستويات صوت افتراضية — النقرة أخفت لأنها بتتكرر كتير، لحظات
