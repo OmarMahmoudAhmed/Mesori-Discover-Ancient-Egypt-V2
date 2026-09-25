@@ -503,12 +503,21 @@ function ProfilePage() {
       {/* نافذة تعديل الحقل */}
       {editingField && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)', maxWidth: '448px', left: '50%', transform: 'translateX(-50%)' }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            width: '100%',
+            maxWidth: '448px',
+            left: '50%',
+            right: 'auto',
+            transform: 'translateX(-50%)',
+            padding: '0 24px',
+            boxSizing: 'border-box',
+          }}
           onClick={() => setEditingField(null)}
         >
           <div
-            className="w-full rounded-t-3xl p-6"
+            className="w-full rounded-3xl p-6"
             style={{ backgroundColor: 'white' }}
             onClick={(e) => e.stopPropagation()}
           >
