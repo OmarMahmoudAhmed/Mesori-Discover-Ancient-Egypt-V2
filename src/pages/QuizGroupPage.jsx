@@ -8,10 +8,9 @@
  *
  * ┌─────────────────────────────────────────────────┐
  * │  <رجوع                              [إعدادات]   │
- * │      [الشعار الفرعوني]  [شخصية المستكشف]       │
- * │      Level 1         [أيقونة]                   │
- * │           سهل                                   │
- * │      اختر المرحلة                               │
+ * │   [شخصية]      Level 1          [أيقونة]        │
+ * │   المستكشف         سهل           المستوى        │
+ * │              اختر المرحلة                        │
  * │  ┌───────────────────────────────────────────┐  │
  * │  │ [نقاط] 100 نقطة  │  [أنبوب] 10 اختبارات    │  │
  * │  └───────────────────────────────────────────┘  │
@@ -28,7 +27,6 @@ import React from 'react';
 import AppWrapper        from '../components/layout/AppWrapper';
 import Header            from '../components/layout/Header';
 import BottomNav         from '../components/layout/BottomNav';
-import EgyptianLogo      from '../components/shared/EgyptianLogo.png';
 import ExplorerCharacter from '../components/shared/ExplorerCharacter';
 import { useApp }        from '../context/AppContext';
 
@@ -74,81 +72,62 @@ function QuizGroupPage() {
         style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
-        {/* ===== قسم الرأس: الشعار والشخصية ===== */}
-        {/*
-          ⬅️ إصلاح 1 (تمرير أفقي): عمود العنوان في النص (flex-1) كان من
-          غير min-w-0، فـ flexbox بيدّي أي flex-item عرض أدنى افتراضي =
-          محتواه الطبيعي (auto) مش صفر، يعني ما كانش بيسمح له بالانكماش
-          تحت عرضه الطبيعي حتى لو مساحته الفعلية أصغر من كده.
-          ⬅️ إصلاح 2 (ميل المحتوى لليسار): بعد حل مشكلة السكرول، ظل
-          العنوان النصي في النص "مايل" شوية لليسار. السبب مش flexbox
-          نفسه، لكن إن الصورتين على الجانبين مش متساويتين في العرض
-          (الشعار 120px والشخصية 90px)، فالمساحة المتبقية للعمود
-          النصي (flex-1) كانت أصلاً غير متمركزة على عرض الصفحة كله —
-          مركزها كان أقرب لجهة الشخصية الأصغر بمقدار الفرق بين
-          العرضين (~15px). الحل: استخدمنا CSS Grid بثلاثة أعمدة، مع
-          عمودين جانبيين بنفس العرض (120px لكل واحد) بدل الاعتماد على
-          حجم الصورة الفعلي، فبيبقى العمود النصي في المنتصف الحقيقي
-          للصفحة دايماً بغض النظر عن حجم الصور جوه الأعمدة الجانبية. */}
-        <div
-          className="grid items-end px-4 pt-2 gap-1"
-          style={{ gridTemplateColumns: '120px 1fr 120px' }}
-        >
+        {/* ===== قسم الرأس: معلومات المستوى =====
+          ⬅️ إعادة تصميم (مقاس متجاوب + ارتفاع أقصر):
+          المشكلة القديمة: عمودان جانبيان بعرض ثابت 120px لكل واحد
+          (240px إجمالي) جوه حاوية أقصى عرضها max-w-md (448px). على
+          مقاس هاتف حقيقي (~360-390px) كان العمود النصي في النص
+          (اسم المستوى ودرجة الصعوبة) بياخد أقل من 100px بس، وكمان
+          شعار ميسوري الكبير (120px) وشخصية المستكشف (90px) سوا كانوا
+          بياخدوا ارتفاع كبير من غير داعي أعلى الصفحة، فبيدفعوا كروت
+          المراحل لتحت وبتحتاج تمرير عشان تبان كلها.
+          الحل: عمودان جانبيان بعرض متجاوب (clamp بدل رقم ثابت) عشان
+          يتناسبوا مع أي مقاس شاشة، استبدال شعار ميسوري (تكرار
+          للهوية، مش معلومة جديدة للمستخدم اللي أصلاً جوه التطبيق)
+          بأيقونة المستوى نفسها (معلومة مرتبطة بالمحتوى ومتوازنة مع
+          حجم الشخصية)، وإزالة نسخة الأيقونة المكرّرة اللي كانت تحت
+          العنوان. النتيجة: ارتفاع القسم اتقل بشكل واضح، والعمود
+          النصي بقى له مساحة كافية على أي مقاس شاشة. */}
+        <div className="flex items-center justify-center gap-3 px-4 pt-1 mb-3">
 
-          {/* الشعار في اليمين (عمود أول = يمين في RTL) */}
-          <div className="flex justify-center">
-            <img
-              src={EgyptianLogo}
-              alt="شعار ميسوري"
-              width={120}
-              height={120}
-              className="drop-shadow-lg"
-            />
+          {/* شخصية المستكشف — يمين الصفحة في RTL (أول عنصر بالـ DOM)، مقاس متجاوب */}
+          <div className="flex-shrink-0 flex justify-center" style={{ width: 'clamp(52px, 16vw, 72px)' }}>
+            <ExplorerCharacter size={72} gender={userProfile.character} className="w-full h-auto" />
           </div>
 
           {/* معلومات المستوى في المنتصف */}
-          <div className="min-w-0 flex flex-col items-center pb-2 overflow-hidden">
+          <div className="min-w-0 flex-1 flex flex-col items-center overflow-hidden">
             {/* شارة Level X */}
             <div
-              className="px-5 py-1.5 rounded-full mb-2"
+              className="px-4 py-1 rounded-full mb-1"
               style={{ backgroundColor: '#2D6A3F' }}
             >
               <span
-                className="font-bold text-white text-base"
+                className="font-bold text-white text-sm"
                 style={{ fontFamily: "'Cinzel', serif" }}
               >
                 {currentLevel.nameEn}
               </span>
             </div>
 
-            {/* اسم الصعوبة بالعربية */}
+            {/* اسم الصعوبة بالعربية — حجم مرن (clamp) عشان يتناسب مع
+                عرض العمود على أي شاشة من غير ما يحتاج قصّ */}
             <h1
-              className="font-black text-3xl text-center truncate max-w-full"
+              className="font-black text-center truncate max-w-full leading-tight"
               style={{
                 fontFamily: "'Cairo', sans-serif",
                 color:      '#2D6A3F',
+                fontSize:   'clamp(20px, 6vw, 26px)',
               }}
             >
               {currentLevel.nameAr}
             </h1>
 
-            {/*
-              * الأيقونة
-              * 🖼️ صورة المستوى (نفس iconSrc المُستخدَم في بطاقة المستوى بالصفحة الرئيسية)
-              */}
-            <img
-              src={currentLevel.iconSrc}
-              alt={currentLevel.nameAr}
-              width={40}
-              height={40}
-              style={{ objectFit: 'contain', marginTop: '4px' }}
-            />
-
             {/* عنوان فرعي */}
-            <div className="flex items-center gap-2 mt-2">
-              <div className="w-12 h-px" style={{ backgroundColor: '#C8922A' }} />
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <div className="w-7 h-px" style={{ backgroundColor: '#C8922A' }} />
               <span
-                className="text-sm font-semibold whitespace-nowrap"
+                className="text-xs font-semibold whitespace-nowrap"
                 style={{
                   fontFamily: "'Cairo', sans-serif",
                   color:      '#8B4513',
@@ -156,57 +135,62 @@ function QuizGroupPage() {
               >
                 اختر المرحلة
               </span>
-              <div className="w-12 h-px" style={{ backgroundColor: '#C8922A' }} />
+              <div className="w-7 h-px" style={{ backgroundColor: '#C8922A' }} />
             </div>
           </div>
 
-          {/* الشخصية في اليسار (عمود ثالث = يسار في RTL)، نفس عرض عمود
-              الشعار (120px) عشان التوسيط الحقيقي للعمود النصي في النص */}
-          <div className="flex justify-center">
-            <ExplorerCharacter size={90} gender={userProfile.character} />
+          {/* أيقونة المستوى — يسار الصفحة في RTL، بنفس مقاس الشخصية
+              للتوازن البصري، بدل شعار ميسوري المكرّر */}
+          <div className="flex-shrink-0 flex justify-center" style={{ width: 'clamp(52px, 16vw, 72px)' }}>
+            <img
+              src={currentLevel.iconSrc}
+              alt={currentLevel.nameAr}
+              className="w-full h-auto"
+              style={{ objectFit: 'contain' }}
+            />
           </div>
         </div>
 
 
         {/* ===== شارات الإحصائيات ===== */}
         <div
-          className="mx-4 mb-4 rounded-2xl p-3 flex items-center justify-around"
+          className="mx-4 mb-4 rounded-2xl px-3 py-2.5 flex items-center justify-around"
           style={{ backgroundColor: 'rgba(255,255,255,0.7)', border: '1px solid rgba(200,146,42,0.2)' }}
         >
           {/* النقاط */}
           <div className="flex items-center gap-2">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: '#2D6A3F' }}
             >
-              <i className="fi fi-rr-star" aria-hidden="true" style={{ fontSize: '16px', color: '#FFFFFF' }} />
+              <i className="fi fi-rr-star" aria-hidden="true" style={{ fontSize: '15px', color: '#FFFFFF' }} />
             </div>
             <div>
-              <p className="font-black text-lg" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
+              <p className="font-black text-base leading-none" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif" }}>
                 {currentLevel.maxPoints}
               </p>
-              <p className="text-xs" style={{ color: '#8B5A2B', fontFamily: "'Cairo', sans-serif" }}>
+              <p className="text-[11px] mt-0.5" style={{ color: '#8B5A2B', fontFamily: "'Cairo', sans-serif" }}>
                 نقطة ممكنة
               </p>
             </div>
           </div>
 
           {/* فاصل عمودي */}
-          <div className="w-px h-10" style={{ backgroundColor: 'rgba(200,146,42,0.3)' }} />
+          <div className="w-px h-8" style={{ backgroundColor: 'rgba(200,146,42,0.3)' }} />
 
           {/* الاختبارات */}
           <div className="flex items-center gap-2">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: '#1A7F8E' }}
             >
-              <i className="fi fi-rr-document" aria-hidden="true" style={{ fontSize: '16px', color: '#FFFFFF' }} />
+              <i className="fi fi-rr-document" aria-hidden="true" style={{ fontSize: '15px', color: '#FFFFFF' }} />
             </div>
             <div>
-              <p className="font-black text-lg" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif", lineHeight: 1 }}>
+              <p className="font-black text-base leading-none" style={{ color: '#3D2B1F', fontFamily: "'Cairo', sans-serif" }}>
                 {currentLevel.quizCount}
               </p>
-              <p className="text-xs" style={{ color: '#8B5A2B', fontFamily: "'Cairo', sans-serif" }}>
+              <p className="text-[11px] mt-0.5" style={{ color: '#8B5A2B', fontFamily: "'Cairo', sans-serif" }}>
                 اختبارات
               </p>
             </div>
