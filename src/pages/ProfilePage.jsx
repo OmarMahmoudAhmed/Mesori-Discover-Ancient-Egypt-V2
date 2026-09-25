@@ -37,7 +37,7 @@ function ProfileField({ icon, iconColor, label, value, onEdit }) {
         style={{ backgroundColor: '#F4E2BC', border: '1px solid rgba(200,146,42,0.3)' }}
       >
         {/* أيقونة Flaticon Uicons (fi fi-rr-pencil) بدلاً من صورة PNG */}
-        <i className="fi fi-rr-pencil" aria-hidden="true" style={{ fontSize: '14px', color: '#8B5A2B' }} />
+        <i className="fi fi-rr-pencil" aria-hidden="true" style={{ fontSize: '14px', color: '#8B5A2B', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
       </button>
 
       {/* اسم الحقل — أيقونة Flaticon Uicons ملوّنة بدلاً من صورة PNG فارغة */}
@@ -333,7 +333,7 @@ function ProfilePage() {
             className="w-full flex items-center justify-center gap-2 mt-4 py-3 rounded-2xl font-bold press-effect no-tap-highlight"
             style={{ backgroundColor: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', color: '#1F9C4C', fontFamily: "'Cairo', sans-serif" }}
           >
-            <i className="fi fi-brands-whatsapp" aria-hidden="true" style={{ fontSize: '15px' }} />
+            <i className="fi fi-brands-whatsapp" aria-hidden="true" style={{ fontSize: '15px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
             <span>شارك ميسوري مع صديق</span>
           </button>
         </div>
@@ -492,7 +492,7 @@ function ProfilePage() {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold press-effect no-tap-highlight"
             style={{ backgroundColor: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)', color: '#DC2626', fontFamily: "'Cairo', sans-serif" }}
           >
-            <i className="fi fi-rr-sign-out-alt" aria-hidden="true" style={{ fontSize: '14px' }} />
+            <i className="fi fi-rr-sign-out-alt" aria-hidden="true" style={{ fontSize: '14px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
             <span>تسجيل الخروج</span>
           </button>
         </div>
