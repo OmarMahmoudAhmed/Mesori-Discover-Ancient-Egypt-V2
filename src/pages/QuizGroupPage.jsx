@@ -76,27 +76,38 @@ function QuizGroupPage() {
 
         {/* ===== قسم الرأس: الشعار والشخصية ===== */}
         {/*
-          ⬅️ إصلاح: الصفحة كانت بتظهر أعرض من الشاشة ويظهر تمرير أفقي.
-          السبب: عمود العنوان في النص (flex-1) كان من غير min-w-0،
-          فـ flexbox بيدّي أي flex-item عرض أدنى افتراضي = محتواه
-          الطبيعي (auto) مش صفر، يعني ما كانش بيسمح له بالانكماش تحت
-          عرضه الطبيعي حتى لو مساحته الفعلية أصغر من كده (خصوصاً مع
-          صورتين ثابتتين 120px + 90px على الجانبين على شاشة ضيقة).
-          min-w-0 + overflow-hidden بيسمحوا للعمود إنه يضيق صح، وأضفنا
-          flex-shrink-0 للصور عشان تفضل بحجمها الطبيعي دايماً. */}
-        <div className="flex items-end justify-between px-4 pt-2 gap-1">
+          ⬅️ إصلاح 1 (تمرير أفقي): عمود العنوان في النص (flex-1) كان من
+          غير min-w-0، فـ flexbox بيدّي أي flex-item عرض أدنى افتراضي =
+          محتواه الطبيعي (auto) مش صفر، يعني ما كانش بيسمح له بالانكماش
+          تحت عرضه الطبيعي حتى لو مساحته الفعلية أصغر من كده.
+          ⬅️ إصلاح 2 (ميل المحتوى لليسار): بعد حل مشكلة السكرول، ظل
+          العنوان النصي في النص "مايل" شوية لليسار. السبب مش flexbox
+          نفسه، لكن إن الصورتين على الجانبين مش متساويتين في العرض
+          (الشعار 120px والشخصية 90px)، فالمساحة المتبقية للعمود
+          النصي (flex-1) كانت أصلاً غير متمركزة على عرض الصفحة كله —
+          مركزها كان أقرب لجهة الشخصية الأصغر بمقدار الفرق بين
+          العرضين (~15px). الحل: استخدمنا CSS Grid بثلاثة أعمدة، مع
+          عمودين جانبيين بنفس العرض (120px لكل واحد) بدل الاعتماد على
+          حجم الصورة الفعلي، فبيبقى العمود النصي في المنتصف الحقيقي
+          للصفحة دايماً بغض النظر عن حجم الصور جوه الأعمدة الجانبية. */}
+        <div
+          className="grid items-end px-4 pt-2 gap-1"
+          style={{ gridTemplateColumns: '120px 1fr 120px' }}
+        >
 
-          {/* الشعار في اليمين */}
-          <img
-            src={EgyptianLogo}
-            alt="شعار ميسوري"
-            width={120}
-            height={120}
-            className="drop-shadow-lg flex-shrink-0"
-          />
+          {/* الشعار في اليمين (عمود أول = يمين في RTL) */}
+          <div className="flex justify-center">
+            <img
+              src={EgyptianLogo}
+              alt="شعار ميسوري"
+              width={120}
+              height={120}
+              className="drop-shadow-lg"
+            />
+          </div>
 
           {/* معلومات المستوى في المنتصف */}
-          <div className="flex-1 min-w-0 flex flex-col items-center pb-2 overflow-hidden">
+          <div className="min-w-0 flex flex-col items-center pb-2 overflow-hidden">
             {/* شارة Level X */}
             <div
               className="px-5 py-1.5 rounded-full mb-2"
@@ -149,8 +160,9 @@ function QuizGroupPage() {
             </div>
           </div>
 
-          {/* الشخصية في اليسار */}
-          <div className="flex-shrink-0">
+          {/* الشخصية في اليسار (عمود ثالث = يسار في RTL)، نفس عرض عمود
+              الشعار (120px) عشان التوسيط الحقيقي للعمود النصي في النص */}
+          <div className="flex justify-center">
             <ExplorerCharacter size={90} gender={userProfile.character} />
           </div>
         </div>
