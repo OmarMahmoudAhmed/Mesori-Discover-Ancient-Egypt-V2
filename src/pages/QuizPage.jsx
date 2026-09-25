@@ -684,7 +684,7 @@ function QuizPage() {
          * شاشة السؤال الحالي
          * ===================================================== */
         <main
-          className="flex-1 overflow-y-auto app-scroll"
+          className="flex-1 overflow-y-auto overflow-x-hidden app-scroll"
           style={{ paddingBottom: '32px' }}
         >
 

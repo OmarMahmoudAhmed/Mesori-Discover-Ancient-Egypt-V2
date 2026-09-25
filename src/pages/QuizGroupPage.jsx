@@ -70,12 +70,21 @@ function QuizGroupPage() {
       <Header showBack={true} onBack={goBack} />
 
       <main
-        className="flex-1 overflow-y-auto app-scroll"
+        className="flex-1 overflow-y-auto overflow-x-hidden app-scroll"
         style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 
         {/* ===== قسم الرأس: الشعار والشخصية ===== */}
-        <div className="flex items-end justify-between px-4 pt-2">
+        {/*
+          ⬅️ إصلاح: الصفحة كانت بتظهر أعرض من الشاشة ويظهر تمرير أفقي.
+          السبب: عمود العنوان في النص (flex-1) كان من غير min-w-0،
+          فـ flexbox بيدّي أي flex-item عرض أدنى افتراضي = محتواه
+          الطبيعي (auto) مش صفر، يعني ما كانش بيسمح له بالانكماش تحت
+          عرضه الطبيعي حتى لو مساحته الفعلية أصغر من كده (خصوصاً مع
+          صورتين ثابتتين 120px + 90px على الجانبين على شاشة ضيقة).
+          min-w-0 + overflow-hidden بيسمحوا للعمود إنه يضيق صح، وأضفنا
+          flex-shrink-0 للصور عشان تفضل بحجمها الطبيعي دايماً. */}
+        <div className="flex items-end justify-between px-4 pt-2 gap-1">
 
           {/* الشعار في اليمين */}
           <img
@@ -83,11 +92,11 @@ function QuizGroupPage() {
             alt="شعار ميسوري"
             width={120}
             height={120}
-            className="drop-shadow-lg"
+            className="drop-shadow-lg flex-shrink-0"
           />
 
           {/* معلومات المستوى في المنتصف */}
-          <div className="flex-1 flex flex-col items-center pb-2">
+          <div className="flex-1 min-w-0 flex flex-col items-center pb-2 overflow-hidden">
             {/* شارة Level X */}
             <div
               className="px-5 py-1.5 rounded-full mb-2"
@@ -103,7 +112,7 @@ function QuizGroupPage() {
 
             {/* اسم الصعوبة بالعربية */}
             <h1
-              className="font-black text-3xl"
+              className="font-black text-3xl text-center truncate max-w-full"
               style={{
                 fontFamily: "'Cairo', sans-serif",
                 color:      '#2D6A3F',
@@ -128,7 +137,7 @@ function QuizGroupPage() {
             <div className="flex items-center gap-2 mt-2">
               <div className="w-12 h-px" style={{ backgroundColor: '#C8922A' }} />
               <span
-                className="text-sm font-semibold"
+                className="text-sm font-semibold whitespace-nowrap"
                 style={{
                   fontFamily: "'Cairo', sans-serif",
                   color:      '#8B4513',
@@ -141,7 +150,9 @@ function QuizGroupPage() {
           </div>
 
           {/* الشخصية في اليسار */}
-          <ExplorerCharacter size={90} gender={userProfile.character} />
+          <div className="flex-shrink-0">
+            <ExplorerCharacter size={90} gender={userProfile.character} />
+          </div>
         </div>
 
 

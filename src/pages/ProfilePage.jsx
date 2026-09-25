@@ -155,7 +155,7 @@ function ProfilePage() {
       <Header showBack={true} onBack={goBack} />
 
       <main
-        className="flex-1 overflow-y-auto app-scroll"
+        className="flex-1 overflow-y-auto overflow-x-hidden app-scroll"
         style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
       >
 

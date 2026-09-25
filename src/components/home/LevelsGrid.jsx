@@ -24,7 +24,7 @@ function LevelsGrid() {
   const secondRow = levelsData.slice(3);
 
   return (
-    <section className="px-4 pt-1 pb-2 flex-shrink-0 flex flex-col items-center gap-2">
+    <section className="px-4 pt-2 pb-2 flex-shrink-0 flex flex-col items-center gap-2">
 
       {/* ===== الصف الأول: المستويات 1, 2, 3 ===== */}
       <div className="flex justify-center gap-3">

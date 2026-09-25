@@ -16,8 +16,6 @@ import React, { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import Typed from 'typed.js';
 import logoImage from '../shared/EgyptianLogo.png';
-import ExplorerCharacter from '../shared/ExplorerCharacter';
-import { useApp } from '../../context/AppContext';
 
 /* الشعار: طفو خفيف بس (بدون أي توهّج ذهبي) */
 function AnimatedLogo({ size = 92 }) {
@@ -69,7 +67,7 @@ function TypedWelcomeText() {
         color: '#3D2B1F',
         lineHeight: 1.5,
         marginTop: '4px',
-        minHeight: '39px', /* حجز مساحة سطرين مقدماً عشان الشخصية تحتها ما تقفزش وقت الكتابة */
+        minHeight: '39px', /* حجز مساحة سطرين مقدماً عشان باقي القسم تحته ما يقفزش وقت الكتابة */
       }}
     >
       {prefersReducedMotion ? (
@@ -85,10 +83,8 @@ function TypedWelcomeText() {
 
 function HeroSection() {
 
-  const { userProfile } = useApp();
-
   return (
-    <section className="pt-3 pb-2 px-4 flex-shrink-0 flex flex-col items-center animate-fade-in-up">
+    <section className="pt-2 pb-1 px-4 flex-shrink-0 flex flex-col items-center animate-fade-in-up">
 
       {/* ===== الشعار الكبير + الاسمين، في المنتصف العلوي ===== */}
       <AnimatedLogo size={92} />
@@ -109,13 +105,14 @@ function HeroSection() {
       {/* ===== النص الترحيبي — بتأثير كتابة، سطر مستقل تماماً ===== */}
       <TypedWelcomeText />
 
-      {/* ===== الشخصية — سطر مستقل لوحدها ===== */}
-      <div className="mt-1">
-        <ExplorerCharacter size={58} gender={userProfile.character} />
-      </div>
+      {/*
+        ⬅️ تمت إزالة شخصية المستكشف من الصفحة الرئيسية نهائياً بناءً
+        على طلب إعادة التصميم، عشان نقلل المسافة بين الترحيب والكروت
+        ويبقى طول الصفحة كله في حدود ارتفاع الشاشة من غير سكرول.
+        الاعتماد بقى على الشعار + النص التحفيزي + كروت المستويات بس. */}
 
       {/* فاصل بصري صغير (نقاط ذهبية) */}
-      <div className="flex items-center justify-center gap-2 mt-2 opacity-40">
+      <div className="flex items-center justify-center gap-2 mt-3 opacity-40">
         <span style={{ color: '#C8922A', fontSize: '7px' }}>◆</span>
         <span style={{ color: '#C8922A', fontSize: '10px' }}>◆</span>
         <span style={{ color: '#C8922A', fontSize: '7px' }}>◆</span>
